@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Карта пациента - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="dmed-navbar">
+  <div class="logo">Dmed.Стационар</div>
+  <ul class="nav-menu">
+    <li><a href="index.html">Мои пациенты</a></li>
+    <li><a href="#" class="active">Карта пациента</a></li>
+    <li><a href="#">Отчёты</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="name">МАХМУТХАН А.М.</div>
+    <div>Реабилитолог | РЦ «Акбобек»</div>
+  </div>
+</nav>
+
+<div class="dmed-container">
+
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a href="index.html">Мои пациенты</a>
+    <span class="separator">›</span>
+    <span id="breadcrumb-name"></span>
+  </div>
+
+  <!-- Шапка с данными пациента -->
+  <div class="patient-header" id="patient-header">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>ИИН: <span id="patient-iin"></span></span>
+        <span>Д.р.: <span id="patient-bd"></span></span>
+        <span>Возраст: <span id="patient-age"></span></span>
+        <span>Палата: <span id="patient-ward"></span></span>
+      </div>
+      <div class="patient-meta mt-2">
+        <span>Поступил: <strong id="patient-admission"></strong></span>
+        <span>День курса: <strong id="patient-day"></strong></span>
+        <span>Лечащий врач: <span id="patient-doctor"></span></span>
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <div><small class="text-muted">Диагноз основной:</small></div>
+      <div><strong id="patient-diagnosis-main"></strong></div>
+      <div><small class="text-muted">Уточняющий:</small></div>
+      <div id="patient-diagnosis-clarify"></div>
+    </div>
+  </div>
+
+  <!-- Вкладки карты - ключевое для навигации агента -->
+  <ul class="dmed-tabs" id="mh-navigation">
+    <li><a href="patient.html?id={{PID}}"       data-tab="main"      id="tab-main">Главная</a></li>
+    <li><a href="medical-record.html?id={{PID}}" data-tab="medical"   id="tab-medical">Медицинские записи</a></li>
+    <li><a href="#" data-tab="diagnoses"    id="tab-diagnoses"    onclick="return false;">Диагнозы</a></li>
+    <li><a href="assignments.html?id={{PID}}"    data-tab="assignments" id="tab-assignments">Назначения</a></li>
+    <li><a href="diary.html?id={{PID}}"          data-tab="diary"     id="tab-diary">Дневниковые записи</a></li>
+    <li><a href="#" data-tab="operations"   id="tab-operations"   onclick="return false;">Операции</a></li>
+    <li><a href="#" data-tab="vitals"       id="tab-vitals"       onclick="return false;">Показатели</a></li>
+    <li><a href="#" data-tab="documents"    id="tab-documents"    onclick="return false;">Документы</a></li>
+  </ul>
+
+  <!-- Контент: сводка по карте -->
+  <div class="dmed-panel" style="border-top: none; border-radius: 0 0 3px 3px;">
+    <div class="dmed-panel-body">
+
+      <div class="row">
+        <div class="col-6">
+          <div class="dmed-panel">
+            <div class="dmed-panel-heading"><h4>Медицинские записи</h4></div>
+            <div class="dmed-panel-body" style="padding: 0;">
+              <table class="dmed-table">
+                <tbody id="records-list">
+                  <tr>
+                    <td style="width: 110px;">04.03.2026 09:09</td>
+                    <td><a href="medical-record.html?id={{PID}}&type=primary">Первичный осмотр</a></td>
+                    <td><span class="badge badge-success">Подписан</span></td>
+                  </tr>
+                  <tr>
+                    <td>13.03.2026 10:00</td>
+                    <td><a href="medical-record.html?id={{PID}}&type=stage">Этапный эпикриз</a></td>
+                    <td><span class="badge badge-success">Подписан</span></td>
+                  </tr>
+                  <tr>
+                    <td>— — —</td>
+                    <td><a href="medical-record.html?id={{PID}}&type=new" class="text-muted">+ Создать новую запись</a></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6">
+          <div class="dmed-panel">
+            <div class="dmed-panel-heading"><h4>Последние дневники</h4></div>
+            <div class="dmed-panel-body" style="padding: 0;">
+              <table class="dmed-table">
+                <tbody>
+                  <tr>
+                    <td style="width: 110px;">13.03.2026 09:00</td>
+                    <td>Т° 36.5 | П 84 | АД 110/60</td>
+                    <td><span class="badge badge-success">OK</span></td>
+                  </tr>
+                  <tr>
+                    <td>11.03.2026 09:30</td>
+                    <td>Т° 36.6 | П 86 | АД 110/60</td>
+                    <td><span class="badge badge-success">OK</span></td>
+                  </tr>
+                  <tr>
+                    <td>09.03.2026 09:32</td>
+                    <td>Т° 36.4 | П 86 | АД 110/60</td>
+                    <td><span class="badge badge-success">OK</span></td>
+                  </tr>
+                  <tr>
+                    <td>— — —</td>
+                    <td><a href="diary.html?id={{PID}}&new=1">+ Новая запись</a></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dmed-panel">
+        <div class="dmed-panel-heading">
+          <h4>Назначенные процедуры на сегодня</h4>
+          <a href="assignments.html?id={{PID}}">Все назначения →</a>
+        </div>
+        <div class="dmed-panel-body" style="padding: 0;">
+          <table class="dmed-table" id="today-procedures">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Время</th>
+                <th>Процедура</th>
+                <th>Специалист</th>
+                <th style="width: 100px;">Кабинет</th>
+                <th style="width: 160px;">Статус</th>
+              </tr>
+            </thead>
+            <tbody id="today-procedures-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="text-muted" style="font-size: 11px; text-align: center; padding: 10px;">
+    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+  // Получаем ID пациента из URL
+  const params = new URLSearchParams(window.location.search);
+  const patientId = params.get('id') || '352';
+  const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+
+  // Подставляем в шапку
+  document.getElementById('breadcrumb-name').textContent = patient.fullName;
+  document.getElementById('patient-name').textContent = patient.fullName;
+  document.getElementById('patient-id').textContent = patient.id;
+  document.getElementById('patient-iin').textContent = patient.iin;
+  document.getElementById('patient-bd').textContent = patient.birthDate;
+  document.getElementById('patient-age').textContent = patient.age + ' лет';
+  document.getElementById('patient-ward').textContent = patient.ward;
+  document.getElementById('patient-admission').textContent = patient.admissionDate + ' ' + (patient.admissionTime || '');
+  document.getElementById('patient-day').textContent = patient.currentDay + '/14';
+  document.getElementById('patient-doctor').textContent = patient.doctorShort;
+  document.getElementById('patient-diagnosis-main').textContent = patient.admissionDiagnosisMain;
+  document.getElementById('patient-diagnosis-clarify').textContent = patient.admissionDiagnosisClarify;
+  document.title = patient.fullName + ' - Dmed.Стационар';
+
+  // Подставляем ID в ссылки вкладок
+  document.querySelectorAll('a[href*="{{PID}}"]').forEach(a => {
+    a.href = a.href.replace('{{PID}}', patient.id);
+  });
+
+  // Сегодняшние процедуры (берём типовой набор для категории диагноза)
+  const procSet = window.PROCEDURE_SETS[patient.diagnosisCategory] || [];
+  const tbody = document.getElementById('today-procedures-body');
+  procSet.slice(0, 5).forEach((code, idx) => {
+    const proc = window.PROCEDURES[code];
+    if (!proc) return;
+    const done = idx < 2;
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-procedure-code', code);
+    tr.innerHTML = `
+      <td><strong>${proc.slot}</strong></td>
+      <td>${proc.name}</td>
+      <td>${proc.specialist}</td>
+      <td><small>${proc.room}</small></td>
+      <td>
+        ${done
+          ? '<span class="badge badge-success icon-check">Выполнено</span>'
+          : `<button class="btn btn-success btn-xs" data-action="mark-done" data-code="${code}">Выполнить</button>`
+        }
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Клик "Выполнить" (агент тоже будет это делать)
+  document.addEventListener('click', (e) => {
+    if (e.target.matches('[data-action="mark-done"]')) {
+      const code = e.target.getAttribute('data-code');
+      const tr = e.target.closest('tr');
+      const proc = window.PROCEDURES[code];
+      const now = new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+      tr.querySelector('td:last-child').innerHTML =
+        `<span class="badge badge-success icon-check">Выполнено ${now}</span><span class="ai-badge"></span>`;
+      tr.classList.add('ai-filled-animation');
+    }
+  });
+</script>
+</body>
+</html>

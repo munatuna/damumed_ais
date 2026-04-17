@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Дневниковая запись - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="dmed-navbar">
+  <div class="logo">Dmed.Стационар</div>
+  <ul class="nav-menu">
+    <li><a href="index.html">Мои пациенты</a></li>
+    <li><a href="#" class="active">Дневниковая запись</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="name">МАХМУТХАН А.М.</div>
+    <div>Реабилитолог | РЦ «Акбобек»</div>
+  </div>
+</nav>
+
+<div class="dmed-container">
+
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a id="back-to-patient" href="#">Карта пациента</a>
+    <span class="separator">›</span>
+    <span>Новая дневниковая запись</span>
+  </div>
+
+  <div class="patient-header">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>ИИН: <span id="patient-iin"></span></span>
+        <span>День курса: <strong id="patient-day"></strong></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dmed-panel">
+    <div class="dmed-panel-heading">
+      <h3>Дневниковая запись</h3>
+      <span class="text-muted" style="font-size: 12px;">
+        Дата:
+        <input type="text" id="dtRegDateTime" name="dtRegDateTime"
+               style="width: 130px; padding: 2px 6px; font-size: 12px;" readonly>
+      </span>
+    </div>
+
+    <div class="dmed-panel-body">
+
+      <!-- Витальные показатели - ключевая часть для демо.
+           ID совпадают с реальными из дампов Дамумеда (ntbTemperature и т.д.) -->
+      <div class="dmed-panel" style="background: #fafbfc;">
+        <div class="dmed-panel-heading" style="background: transparent; border-bottom: 1px dashed var(--dmed-border);">
+          <h4>Витальные показатели</h4>
+          <small class="text-muted">Скажите агенту: «пульс 82, давление 110 на 70, температура 36,6»</small>
+        </div>
+        <div class="dmed-panel-body">
+          <div class="row">
+            <div class="col-2">
+              <div class="form-group">
+                <label for="ntbTemperature">Т° (°C)</label>
+                <input type="text" class="form-control" id="ntbTemperature" name="ntbTemperature"
+                       data-vital-key="temperature" placeholder="36.6">
+              </div>
+            </div>
+            <div class="col-2">
+              <div class="form-group">
+                <label for="ntbPulse">Пульс</label>
+                <input type="text" class="form-control" id="ntbPulse" name="ntbPulse"
+                       data-vital-key="pulse" placeholder="82">
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="form-group">
+                <label>АД (сист./диаст.)</label>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                  <input type="text" class="form-control" id="ntbTopPressure" name="ntbTopPressure"
+                         data-vital-key="pressure_top" placeholder="110" style="width: 60px;">
+                  <span>/</span>
+                  <input type="text" class="form-control" id="ntbBottomPressure" name="ntbBottomPressure"
+                         data-vital-key="pressure_bottom" placeholder="70" style="width: 60px;">
+                </div>
+              </div>
+            </div>
+            <div class="col-2">
+              <div class="form-group">
+                <label for="ntbBreath">ЧДД</label>
+                <input type="text" class="form-control" id="ntbBreath" name="ntbBreath"
+                       data-vital-key="breath" placeholder="20">
+              </div>
+            </div>
+            <div class="col-2">
+              <div class="form-group">
+                <label for="ntbSaturation">SpO2 (%)</label>
+                <input type="text" class="form-control" id="ntbSaturation" name="ntbSaturation"
+                       data-vital-key="saturation" placeholder="98">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-3">
+              <div class="form-group">
+                <label for="cmbResuscitationStatus">Состояние</label>
+                <select class="form-control" id="cmbResuscitationStatus" name="cmbResuscitationStatus"
+                        data-vital-key="status">
+                  <option value="">— выбрать —</option>
+                  <option value="удовлетворительное">удовлетворительное</option>
+                  <option value="средней тяжести">средней тяжести</option>
+                  <option value="тяжёлое">тяжёлое</option>
+                  <option value="крайне тяжёлое">крайне тяжёлое</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-2">
+              <div class="form-group">
+                <label for="ntbWeight">Вес (кг)</label>
+                <input type="text" class="form-control" id="ntbWeight" name="ntbWeight"
+                       data-vital-key="weight" placeholder="31">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Свободный текст дневника -->
+      <div class="form-group">
+        <label for="diary-note">Описание состояния и динамики</label>
+        <textarea class="form-control" id="diary-note" name="diary-note"
+                  data-vital-key="note"
+                  rows="8"
+                  placeholder="Жалоб нет. Общее состояние удовлетворительное. Аппетит, сон не нарушены..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Процедуры выполнены:</label>
+        <div id="procedures-check">
+          <label style="font-weight: normal; margin-right: 15px;">
+            <input type="checkbox" data-proc="Дыхательная гимнастика"> Дыхательная гимнастика
+          </label>
+          <label style="font-weight: normal; margin-right: 15px;">
+            <input type="checkbox" data-proc="Кинезотерапия"> Кинезотерапия
+          </label>
+          <label style="font-weight: normal; margin-right: 15px;">
+            <input type="checkbox" data-proc="Гидрокинезотерапия"> Гидрокинезотерапия
+          </label>
+          <label style="font-weight: normal; margin-right: 15px;">
+            <input type="checkbox" data-proc="Массаж"> Массаж грудной клетки
+          </label>
+          <label style="font-weight: normal; margin-right: 15px;">
+            <input type="checkbox" data-proc="Аэрозольтерапия"> Аэрозольтерапия
+          </label>
+        </div>
+      </div>
+
+      <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn" onclick="history.back();">Отмена</button>
+        <button class="btn btn-primary" id="save-diary">Сохранить</button>
+        <button class="btn btn-success" id="sign-diary">Сохранить и подписать</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="text-muted" style="font-size: 11px; text-align: center; padding: 10px;">
+    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const patientId = params.get('id') || '352';
+  const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+
+  document.getElementById('patient-name').textContent = patient.fullName;
+  document.getElementById('patient-id').textContent = patient.id;
+  document.getElementById('patient-iin').textContent = patient.iin;
+  document.getElementById('patient-day').textContent = patient.currentDay + '/14';
+  document.getElementById('back-to-patient').href = 'patient.html?id=' + patient.id;
+  document.title = 'Дневник - ' + patient.fullName;
+
+  // Дата записи
+  const now = new Date();
+  document.getElementById('dtRegDateTime').value = now.toLocaleString('ru', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  }).replace(',', '');
+
+  // Кнопки
+  document.getElementById('save-diary').addEventListener('click', () => {
+    alert('Дневник сохранён (демо).');
+  });
+  document.getElementById('sign-diary').addEventListener('click', () => {
+    alert('Дневник подписан (демо).');
+    window.location.href = 'patient.html?id=' + patient.id;
+  });
+
+  // API для агента: заполнение vitals
+  window.addEventListener('dmed-fill-diary', (e) => {
+    const { vitals = {}, note, procedures_done = [] } = e.detail || {};
+
+    // Заполняем поля vitals по data-vital-key
+    Object.entries(vitals).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') return;
+      const field = document.querySelector(`[data-vital-key="${key}"]`);
+      if (field) {
+        field.value = value;
+        field.classList.remove('ai-filled-animation');
+        void field.offsetWidth;
+        field.classList.add('ai-filled-animation');
+        const group = field.closest('.form-group');
+        if (group && !group.querySelector('.ai-badge')) {
+          const lbl = group.querySelector('label');
+          if (lbl) {
+            const b = document.createElement('span');
+            b.className = 'ai-badge';
+            lbl.appendChild(b);
+          }
+        }
+      }
+    });
+
+    // Свободный текст
+    if (note) {
+      const ta = document.getElementById('diary-note');
+      ta.value = note;
+      ta.classList.remove('ai-filled-animation');
+      void ta.offsetWidth;
+      ta.classList.add('ai-filled-animation');
+    }
+
+    // Чекбоксы процедур - ищем по подстроке
+    procedures_done.forEach(name => {
+      document.querySelectorAll('#procedures-check input[type=checkbox]').forEach(cb => {
+        const proc = (cb.getAttribute('data-proc') || '').toLowerCase();
+        if (proc.includes(name.toLowerCase()) || name.toLowerCase().includes(proc)) {
+          cb.checked = true;
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>

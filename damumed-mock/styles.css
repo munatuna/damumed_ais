@@ -1,0 +1,325 @@
+/* Damumed-style CSS: имитирует внешний вид реального интерфейса Дамумеда.
+   Bootstrap 3 + Kendo UI layout. Цвета и структура подобраны под дампы. */
+
+:root {
+  --dmed-primary: #337ab7;
+  --dmed-primary-dark: #286090;
+  --dmed-success: #5cb85c;
+  --dmed-warning: #f0ad4e;
+  --dmed-danger: #d9534f;
+  --dmed-info: #5bc0de;
+  --dmed-border: #ddd;
+  --dmed-bg: #f5f5f5;
+  --dmed-text: #333;
+  --dmed-muted: #777;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  color: var(--dmed-text);
+  background: var(--dmed-bg);
+  line-height: 1.42857143;
+}
+
+a { color: var(--dmed-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Верхний навбар Дамумеда */
+.dmed-navbar {
+  background: #fff;
+  border-bottom: 1px solid var(--dmed-border);
+  padding: 0 20px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dmed-navbar .logo {
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--dmed-primary);
+  margin-right: 30px;
+}
+
+.dmed-navbar .logo::before {
+  content: "⚕ ";
+  color: var(--dmed-success);
+}
+
+.dmed-navbar .nav-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.dmed-navbar .nav-menu li { margin: 0; }
+.dmed-navbar .nav-menu a {
+  display: block;
+  padding: 15px 15px;
+  color: var(--dmed-text);
+  border-bottom: 3px solid transparent;
+}
+.dmed-navbar .nav-menu a:hover { background: #f9f9f9; text-decoration: none; }
+.dmed-navbar .nav-menu a.active {
+  color: var(--dmed-primary);
+  border-bottom-color: var(--dmed-primary);
+}
+
+.dmed-navbar .user-info {
+  color: var(--dmed-muted);
+  font-size: 12px;
+  text-align: right;
+}
+.dmed-navbar .user-info .name { color: var(--dmed-text); font-weight: 600; }
+
+/* Основной контейнер */
+.dmed-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Breadcrumbs */
+.dmed-breadcrumb {
+  background: transparent;
+  padding: 8px 0;
+  margin-bottom: 15px;
+  font-size: 12px;
+  color: var(--dmed-muted);
+}
+.dmed-breadcrumb a { color: var(--dmed-muted); }
+.dmed-breadcrumb .separator { margin: 0 8px; }
+
+/* Кнопки в стиле Bootstrap 3 */
+.btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.428;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  user-select: none;
+  transition: all 0.15s ease;
+  background: #fff;
+  color: var(--dmed-text);
+  border-color: #ccc;
+}
+.btn:hover { background: #e6e6e6; border-color: #adadad; text-decoration: none; }
+.btn-primary { background: var(--dmed-primary); border-color: var(--dmed-primary-dark); color: #fff; }
+.btn-primary:hover { background: var(--dmed-primary-dark); color: #fff; }
+.btn-success { background: var(--dmed-success); border-color: #4cae4c; color: #fff; }
+.btn-success:hover { background: #449d44; color: #fff; }
+.btn-warning { background: var(--dmed-warning); border-color: #eea236; color: #fff; }
+.btn-danger { background: var(--dmed-danger); border-color: #d43f3a; color: #fff; }
+.btn-sm { padding: 4px 8px; font-size: 12px; }
+.btn-xs { padding: 1px 5px; font-size: 11px; }
+
+/* Панель/карточка */
+.dmed-panel {
+  background: #fff;
+  border: 1px solid var(--dmed-border);
+  border-radius: 3px;
+  margin-bottom: 20px;
+}
+.dmed-panel-heading {
+  padding: 10px 15px;
+  background: #f5f5f5;
+  border-bottom: 1px solid var(--dmed-border);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dmed-panel-heading h3, .dmed-panel-heading h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.dmed-panel-body { padding: 15px; }
+
+/* Табы (Bootstrap 3 nav-tabs) */
+.dmed-tabs {
+  border-bottom: 1px solid var(--dmed-border);
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  background: #fff;
+}
+.dmed-tabs li { margin-bottom: -1px; }
+.dmed-tabs a {
+  display: block;
+  padding: 10px 15px;
+  color: var(--dmed-primary);
+  border: 1px solid transparent;
+  border-radius: 4px 4px 0 0;
+  margin-right: 2px;
+}
+.dmed-tabs a:hover { background: #eee; text-decoration: none; }
+.dmed-tabs a.active {
+  color: var(--dmed-text);
+  background: #fff;
+  border-color: var(--dmed-border) var(--dmed-border) transparent;
+  cursor: default;
+}
+
+/* Формы */
+.form-group { margin-bottom: 15px; }
+.form-group label {
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 5px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.42;
+  color: var(--dmed-text);
+  background: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  font-family: inherit;
+}
+.form-control:focus {
+  border-color: #66afe9;
+  outline: 0;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 6px rgba(102,175,233,.6);
+}
+textarea.form-control { min-height: 80px; resize: vertical; }
+
+/* Row / columns (упрощённый grid) */
+.row { display: flex; flex-wrap: wrap; margin: 0 -10px; }
+.row > [class^="col-"] { padding: 0 10px; }
+.col-2  { flex: 0 0 16.66%; max-width: 16.66%; }
+.col-3  { flex: 0 0 25%; max-width: 25%; }
+.col-4  { flex: 0 0 33.33%; max-width: 33.33%; }
+.col-6  { flex: 0 0 50%; max-width: 50%; }
+.col-8  { flex: 0 0 66.66%; max-width: 66.66%; }
+.col-12 { flex: 0 0 100%; max-width: 100%; }
+
+/* Таблицы */
+.dmed-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 12px;
+}
+.dmed-table th, .dmed-table td {
+  border: 1px solid var(--dmed-border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+.dmed-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: var(--dmed-muted);
+}
+.dmed-table tr:hover { background: #f9f9f9; }
+
+.bg-success { background-color: #dff0d8 !important; }
+.bg-warning { background-color: #fcf8e3 !important; }
+.bg-danger  { background-color: #f2dede !important; }
+.text-center { text-align: center; }
+
+/* Статус-бейджи */
+.badge {
+  display: inline-block;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-radius: 10px;
+}
+.badge-success { background: var(--dmed-success); }
+.badge-warning { background: var(--dmed-warning); }
+.badge-danger { background: var(--dmed-danger); }
+.badge-info { background: var(--dmed-info); }
+.badge-default { background: #777; }
+
+/* Карточка пациента */
+.patient-header {
+  background: #fff;
+  border: 1px solid var(--dmed-border);
+  border-radius: 3px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.patient-header .patient-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dmed-text);
+  margin: 0 0 5px 0;
+}
+.patient-header .patient-meta {
+  color: var(--dmed-muted);
+  font-size: 12px;
+}
+.patient-header .patient-meta span { margin-right: 15px; }
+
+/* Утилиты */
+.text-muted { color: var(--dmed-muted); }
+.mt-2 { margin-top: 10px; }
+.mt-3 { margin-top: 15px; }
+.mb-2 { margin-bottom: 10px; }
+.mb-3 { margin-bottom: 15px; }
+.pull-right { float: right; }
+
+/* Иконки (простые через unicode) */
+.icon::before { font-family: monospace; }
+.icon-check::before { content: "✓ "; color: var(--dmed-success); }
+.icon-clock::before { content: "⏱ "; color: var(--dmed-warning); }
+.icon-doc::before { content: "📄 "; }
+.icon-pill::before { content: "💊 "; }
+.icon-stethoscope::before { content: "🩺 "; }
+.icon-mic::before { content: "🎤 "; }
+
+/* Подсветка только что заполненного поля (будет мигать после агента) */
+@keyframes aiFilled {
+  0% { background-color: #fff3cd; box-shadow: 0 0 0 3px rgba(240,173,78,.4); }
+  100% { background-color: #fff; box-shadow: none; }
+}
+.ai-filled-animation { animation: aiFilled 1.5s ease-out; }
+
+/* Стикер "Заполнено AI" */
+.ai-badge {
+  display: inline-block;
+  font-size: 10px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 8px;
+  margin-left: 5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.ai-badge::before { content: "✨ AI"; }

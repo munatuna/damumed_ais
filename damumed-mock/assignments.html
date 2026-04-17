@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Назначения - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="dmed-navbar">
+  <div class="logo">Dmed.Стационар</div>
+  <ul class="nav-menu">
+    <li><a href="index.html">Мои пациенты</a></li>
+    <li><a href="#" class="active">Назначения</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="name">МАХМУТХАН А.М.</div>
+    <div>Реабилитолог | РЦ «Акбобек»</div>
+  </div>
+</nav>
+
+<div class="dmed-container">
+
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a id="back-to-patient" href="#">Карта пациента</a>
+    <span class="separator">›</span>
+    <span>Назначения</span>
+  </div>
+
+  <div class="patient-header">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>Поступил: <span id="patient-admission"></span></span>
+        <span>Диагноз: <span id="patient-diagnosis"></span></span>
+      </div>
+    </div>
+    <div>
+      <button class="btn btn-primary" id="btn-generate-schedule">
+        ✨ Сгенерировать расписание (AI)
+      </button>
+    </div>
+  </div>
+
+  <div class="dmed-panel">
+    <div class="dmed-panel-heading">
+      <h3>Лист врачебных назначений — 9 рабочих дней</h3>
+      <small class="text-muted" id="schedule-info">Расписание не сформировано</small>
+    </div>
+    <div class="dmed-panel-body" style="padding: 0; overflow-x: auto;">
+      <table class="dmed-table" id="assignmentTable" style="min-width: 1000px;">
+        <thead id="schedule-head">
+          <tr>
+            <th style="width: 220px;">Процедура</th>
+            <th style="width: 80px;">Время</th>
+            <!-- 9 колонок с датами добавляются JS -->
+          </tr>
+        </thead>
+        <tbody id="assignmentTableBody">
+          <tr>
+            <td colspan="11" class="text-center text-muted" style="padding: 40px;">
+              <em>Расписание ещё не сформировано. Нажмите «Сгенерировать расписание» или скажите агенту:</em><br>
+              <strong>«Сформируй расписание процедур на 9 дней»</strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="text-muted" style="font-size: 11px; text-align: center; padding: 10px;">
+    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const patientId = params.get('id') || '352';
+  const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+
+  document.getElementById('patient-name').textContent = patient.fullName;
+  document.getElementById('patient-id').textContent = patient.id;
+  document.getElementById('patient-admission').textContent = patient.admissionDate;
+  document.getElementById('patient-diagnosis').textContent = patient.admissionDiagnosisMain;
+  document.getElementById('back-to-patient').href = 'patient.html?id=' + patient.id;
+  document.title = 'Назначения - ' + patient.fullName;
+
+  // Генерация дат: 9 рабочих дней начиная с даты поступления (пропускаем воскресенья)
+  function generateWorkingDays(startStr, count) {
+    const [dd, mm, yyyy] = startStr.split('.').map(Number);
+    const days = [];
+    let d = new Date(yyyy, mm - 1, dd);
+    while (days.length < count) {
+      if (d.getDay() !== 0) { // пропускаем воскресенья
+        days.push(new Date(d));
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return days;
+  }
+
+  // Рендер расписания
+  function renderSchedule(schedule) {
+    const head = document.getElementById('schedule-head').querySelector('tr');
+    const body = document.getElementById('assignmentTableBody');
+    head.innerHTML = '<th style="width: 220px;">Процедура</th><th style="width: 80px;">Время</th>';
+    body.innerHTML = '';
+
+    const days = generateWorkingDays(patient.admissionDate, 9);
+    days.forEach((d, i) => {
+      const dateStr = d.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' });
+      const th = document.createElement('th');
+      th.className = 'text-center';
+      th.innerHTML = `День ${i + 1}<br><small>${dateStr}</small>`;
+      head.appendChild(th);
+    });
+
+    schedule.forEach((row) => {
+      const proc = window.PROCEDURES[row.code];
+      if (!proc) return;
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-procedure-code', row.code);
+      tr.innerHTML = `
+        <td>
+          <strong>${proc.name}</strong>
+          <br><small class="text-muted">${proc.specialist} | ${proc.room}</small>
+        </td>
+        <td class="text-center"><strong>${proc.slot}</strong></td>
+      `;
+      row.days.forEach((status, dayIdx) => {
+        const td = document.createElement('td');
+        td.className = 'text-center';
+        td.setAttribute('data-day', dayIdx);
+        if (status === 'done') {
+          td.classList.add('bg-success');
+          td.innerHTML = '<span class="icon-check"></span>';
+        } else if (status === 'scheduled') {
+          td.classList.add('bg-warning');
+          td.innerHTML = `<button class="btn btn-success btn-xs" data-action="complete" data-code="${row.code}" data-day="${dayIdx}">✓</button>`;
+        } else {
+          td.innerHTML = '—';
+        }
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+
+    document.getElementById('schedule-info').innerHTML =
+      `<span class="icon-check"></span> Сформировано процедур: <strong>${schedule.length}</strong> × 9 дней = <strong>${schedule.length * 9}</strong> сеансов`;
+  }
+
+  // Клик "Выполнить"
+  document.addEventListener('click', (e) => {
+    if (e.target.matches('[data-action="complete"]')) {
+      const td = e.target.closest('td');
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+      td.classList.remove('bg-warning');
+      td.classList.add('bg-success');
+      td.innerHTML = `<span class="icon-check" title="Выполнено ${timeStr}"></span><br><small>${timeStr}</small>`;
+      td.classList.add('ai-filled-animation');
+    }
+  });
+
+  // Кнопка "Сгенерировать" вручную - использует алгоритм из агента если он есть,
+  // иначе дефолтный набор из PROCEDURE_SETS
+  document.getElementById('btn-generate-schedule').addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('dmed-request-schedule', { detail: { patientId: patient.id } }));
+    // Fallback на случай если агент не отвечает
+    setTimeout(() => {
+      if (document.querySelectorAll('#assignmentTableBody tr[data-procedure-code]').length === 0) {
+        defaultSchedule();
+      }
+    }, 500);
+  });
+
+  function defaultSchedule() {
+    const procSet = window.PROCEDURE_SETS[patient.diagnosisCategory] || [];
+    const schedule = procSet.map(code => ({
+      code,
+      days: Array(9).fill('scheduled').map((_, i) => i < patient.currentDay - 1 ? 'done' : 'scheduled')
+    }));
+    renderSchedule(schedule);
+  }
+
+  // API для агента: показать сгенерированное расписание
+  window.addEventListener('dmed-fill-schedule', (e) => {
+    const { schedule } = e.detail || {};
+    if (schedule) renderSchedule(schedule);
+  });
+
+  window.addEventListener('dmed-mark-done', (e) => {
+    const { code, day } = e.detail || {};
+    const td = document.querySelector(`tr[data-procedure-code="${code}"] td[data-day="${day}"]`);
+    if (td && td.querySelector('[data-action="complete"]')) {
+      td.querySelector('[data-action="complete"]').click();
+    }
+  });
+</script>
+</body>
+</html>

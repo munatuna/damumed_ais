@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Медицинская запись - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="dmed-navbar">
+  <div class="logo">Dmed.Стационар</div>
+  <ul class="nav-menu">
+    <li><a href="index.html">Мои пациенты</a></li>
+    <li><a href="#" class="active">Медицинская запись</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="name">МАХМУТХАН А.М.</div>
+    <div>Реабилитолог | РЦ «Акбобек»</div>
+  </div>
+</nav>
+
+<div class="dmed-container">
+
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a href="index.html">Мои пациенты</a>
+    <span class="separator">›</span>
+    <a id="back-to-patient" href="#">Карта пациента</a>
+    <span class="separator">›</span>
+    <span id="record-type-label">Первичный осмотр</span>
+  </div>
+
+  <div class="patient-header">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>ИИН: <span id="patient-iin"></span></span>
+        <span>Д.р.: <span id="patient-bd"></span></span>
+      </div>
+    </div>
+    <div>
+      <span class="badge badge-info" id="record-type-badge">Первичный осмотр</span>
+    </div>
+  </div>
+
+  <div class="dmed-panel">
+    <div class="dmed-panel-heading">
+      <h3 id="record-title">Первичный осмотр</h3>
+      <div>
+        <span class="text-muted" style="font-size: 12px;">
+          Дата:
+          <input type="text" id="dtRegDateTime" name="dtRegDateTime"
+                 style="width: 130px; padding: 2px 6px; font-size: 12px;" readonly>
+        </span>
+      </div>
+    </div>
+
+    <div class="dmed-panel-body">
+
+      <!-- ВНИМАНИЕ: каждая подкатегория - отдельная textarea с id="section-<code>".
+           Агент будет находить их по этим ID и заполнять гранулярно.
+           Коды взяты из реальной схемы Дамумеда (PatientMedicalRecordField, FieldTypeID=7). -->
+
+      <div class="form-group" data-section-code="100">
+        <label for="section-100">
+          <span class="text-muted">(100)</span> Жалобы при поступлении
+          <span class="text-muted" style="font-weight: normal;">— что беспокоит пациента</span>
+        </label>
+        <textarea id="section-100" name="section-100" class="form-control"
+                  data-section-key="complaints"
+                  placeholder="Например: жалобы на частые простудные заболевания..."></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="200">
+        <label for="section-200">
+          <span class="text-muted">(200)</span> Анамнез заболевания
+          <span class="text-muted" style="font-weight: normal;">— когда началось, динамика, предыдущее лечение</span>
+        </label>
+        <textarea id="section-200" name="section-200" class="form-control"
+                  data-section-key="anamnesis_disease"
+                  placeholder="Например: состоит на диспансерном учёте с..."></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="300">
+        <label for="section-300">
+          <span class="text-muted">(300)</span> Анамнез жизни
+          <span class="text-muted" style="font-weight: normal;">— роды, развитие, перенесённые заболевания, наследственность</span>
+        </label>
+        <textarea id="section-300" name="section-300" class="form-control"
+                  data-section-key="anamnesis_life"
+                  placeholder="Например: ребёнок от N-й беременности, роды срочные..."></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="400">
+        <label for="section-400">
+          <span class="text-muted">(400)</span> Аллергологический анамнез
+        </label>
+        <textarea id="section-400" name="section-400" class="form-control"
+                  data-section-key="allergy_anamnesis"
+                  rows="2"
+                  placeholder="Например: аллергоанамнез спокоен"></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="500">
+        <label for="section-500">
+          <span class="text-muted">(500)</span> Объективные данные
+          <span class="text-muted" style="font-weight: normal;">— осмотр, вес, рост, витальные показатели, системы органов</span>
+        </label>
+        <textarea id="section-500" name="section-500" class="form-control"
+                  data-section-key="objective"
+                  rows="6"
+                  placeholder="Например: вес..., рост..., ИМТ..., общее состояние..."></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="700">
+        <label for="section-700">
+          <span class="text-muted">(700)</span> Обоснование диагноза
+        </label>
+        <textarea id="section-700" name="section-700" class="form-control"
+                  data-section-key="diagnosis_rationale"
+                  rows="3"
+                  placeholder="На основании клинических и параклинических данных..."></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="800">
+        <label for="section-800">
+          <span class="text-muted">(800)</span> Инструментальные исследования
+          <span class="text-muted" style="font-weight: normal;">— ЭКГ, УЗИ, МРТ, ОАК, ОАМ и т.д.</span>
+        </label>
+        <textarea id="section-800" name="section-800" class="form-control"
+                  data-section-key="instrumental"
+                  rows="4"
+                  placeholder="ЭКГ от ... Заключение..."></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="900">
+        <label for="section-900">
+          <span class="text-muted">(900)</span> Проведенное лечение / План лечения
+        </label>
+        <textarea id="section-900" name="section-900" class="form-control"
+                  data-section-key="treatment"
+                  rows="4"
+                  placeholder="Режим..., стол №..., физиолечение..."></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="1200">
+        <label for="section-1200">
+          <span class="text-muted">(1200)</span> Исход лечения
+        </label>
+        <textarea id="section-1200" name="section-1200" class="form-control"
+                  data-section-key="outcome"
+                  rows="2"
+                  placeholder="Заполняется при выписке"></textarea>
+      </div>
+
+      <div class="form-group" data-section-code="600" id="section-600-wrapper" style="display: none;">
+        <label for="section-600">
+          <span class="text-muted">(600)</span> Выписной эпикриз
+        </label>
+        <textarea id="section-600" name="section-600" class="form-control"
+                  data-section-key="discharge_summary"
+                  rows="4"></textarea>
+      </div>
+
+      <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn" onclick="history.back();">Отмена</button>
+        <button class="btn btn-primary" id="save-record">Сохранить</button>
+        <button class="btn btn-success" id="sign-record">Сохранить и подписать</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="text-muted" style="font-size: 11px; text-align: center; padding: 10px;">
+    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const patientId = params.get('id') || '352';
+  const recordType = params.get('type') || 'primary'; // primary | stage | discharge | new
+  const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+
+  document.getElementById('patient-name').textContent = patient.fullName;
+  document.getElementById('patient-id').textContent = patient.id;
+  document.getElementById('patient-iin').textContent = patient.iin;
+  document.getElementById('patient-bd').textContent = patient.birthDate;
+  document.getElementById('back-to-patient').href = 'patient.html?id=' + patient.id;
+
+  // Подстраиваем тип записи
+  const typeLabels = {
+    primary:   'Первичный осмотр',
+    stage:     'Этапный эпикриз',
+    discharge: 'Выписной эпикриз',
+    new:       'Новая медицинская запись'
+  };
+  const label = typeLabels[recordType] || typeLabels.primary;
+  document.getElementById('record-type-label').textContent = label;
+  document.getElementById('record-type-badge').textContent = label;
+  document.getElementById('record-title').textContent = label;
+  document.title = label + ' - ' + patient.fullName;
+
+  // Показываем поле "Выписной эпикриз" только для типа discharge
+  if (recordType === 'discharge') {
+    document.getElementById('section-600-wrapper').style.display = '';
+  }
+
+  // Дата записи
+  const now = new Date();
+  const dateStr = now.toLocaleString('ru', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  }).replace(',', '');
+  document.getElementById('dtRegDateTime').value = dateStr;
+
+  // Кнопки
+  document.getElementById('save-record').addEventListener('click', () => {
+    alert('Черновик сохранён (демо).');
+  });
+  document.getElementById('sign-record').addEventListener('click', () => {
+    alert('Запись подписана (демо). В реальности отправилось бы в КМИС.');
+    window.location.href = 'patient.html?id=' + patient.id;
+  });
+
+  // API для агента: он кидает сюда событие с объектом {sectionKey: text}
+  // и мы заполняем textarea с подсветкой
+  window.addEventListener('dmed-fill-record', (e) => {
+    const fields = e.detail || {};
+    Object.entries(fields).forEach(([key, value]) => {
+      // Ищем textarea по data-section-key ИЛИ по code
+      let ta = document.querySelector(`textarea[data-section-key="${key}"]`);
+      if (!ta) ta = document.querySelector(`textarea[id="section-${key}"]`);
+      if (ta && value) {
+        ta.value = value;
+        ta.classList.remove('ai-filled-animation');
+        // Перезапуск анимации
+        void ta.offsetWidth;
+        ta.classList.add('ai-filled-animation');
+        // Добавляем бейдж "AI" рядом с label, если ещё нет
+        const label = ta.closest('.form-group')?.querySelector('label');
+        if (label && !label.querySelector('.ai-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'ai-badge';
+          label.appendChild(badge);
+        }
+      }
+    });
+  });
+</script>
+</body>
+</html>
