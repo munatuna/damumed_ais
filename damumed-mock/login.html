@@ -233,7 +233,7 @@
   <div class="divider">или выберите роль напрямую</div>
 
   <div class="role-cards">
-    <a class="role-card" href="index.html">
+    <a class="role-card" href="index.html" onclick="sessionStorage.setItem('dmed_role','doctor')">
       <div class="role-icon">🩺</div>
       <div class="role-title">Лечащий врач</div>
       <div class="role-desc">Карты пациентов, медицинские записи, назначения</div>
@@ -248,14 +248,14 @@
   <div class="specialist-panel" id="specialist-panel">
     <h4>Выберите специалиста</h4>
     <div class="spec-list">
-      <a class="spec-btn" href="specialist-queue.html?specialist=massager">
+      <a class="spec-btn" href="specialist-queue.html?specialist=massager" onclick="sessionStorage.setItem('dmed_role','specialist')">
         <span class="spec-icon">🤲</span>
         <span class="spec-info">
           Массажист
           <small>Кабинет массажа · Очередь пациентов</small>
         </span>
       </a>
-      <a class="spec-btn" href="specialist-queue.html?specialist=psychologist">
+      <a class="spec-btn" href="specialist-queue.html?specialist=psychologist" onclick="sessionStorage.setItem('dmed_role','specialist')">
         <span class="spec-icon">🧠</span>
         <span class="spec-info">
           Психолог
@@ -288,6 +288,7 @@
     const pass  = document.getElementById('f-pass').value;
     if (!pass) { shake(); return; }
     const user = USERS[login] || USERS['admin'];
+    sessionStorage.setItem('dmed_role', user.role);
     window.location.href = user.redirect;
   }
 

@@ -77,6 +77,10 @@
 
 <script src="data.js"></script>
 <script>
+  if (!sessionStorage.getItem('dmed_role')) {
+    window.location.replace('login.html');
+  }
+
   // Рендер списка пациентов
   const tbody = document.getElementById('patients-tbody');
 
