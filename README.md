@@ -6,12 +6,60 @@
 
 ---
 
+## Читать код — с чего начать
+
+Если хотите понять как всё устроено, читайте в таком порядке:
+
+| Файл | Что делает |
+|---|---|
+| `damumed-extension/manifest.json` | Точка входа extension, права доступа |
+| `damumed-extension/content.js` | Главный агент: голос → LLM → DOM. Весь основной флоу здесь |
+| `damumed-extension/agent/prompts.js` | Системные промпты и JSON-схемы для Claude |
+| `damumed-extension/agent/actions.js` | Исполнение действий: заполнение полей, навигация, диагнозы |
+| `damumed-extension/background.js` | Service worker: хранит API ключ, проксирует настройки |
+| `scheduler-api/main.py` | FastAPI: `/api/llm` (Claude прокси) + `/api/schedule` (OR-Tools) |
+| `scheduler-api/solver.py` | CP-SAT планировщик расписания на 14 дней |
+| `damumed-mock/data.js` | Данные пациентов, справочник процедур МКБ |
+| `damumed-mock/storage.js` | Вся localStorage-персистентность |
+| `damumed-mock/specialist-common.js` | Логика кабинетов специалистов |
+
+---
+
 ## Структура проекта
 
 ```
-damumed-extension/   — Chrome Extension (Manifest V3)
-damumed-mock/        — HTML-мокап интерфейса Дамумед
-scheduler-api/       — FastAPI сервер (Claude прокси + OR-Tools планировщик)
+damumed-extension/
+  content.js          — основной агент (внедряется в страницу)
+  background.js       — service worker
+  bridge.js           — мост между мирами extension
+  popup.html/js       — настройка API ключа
+  agent/
+    prompts.js        — промпты Claude + JSON-схемы
+    actions.js        — выполнение действий в DOM
+    filler.js         — заполнение форм
+    scheduler.js      — вызов OR-Tools
+  lib/
+    speech.js         — Web Speech API обёртка
+
+damumed-mock/
+  index.html          — список пациентов
+  patient.html        — карта пациента
+  medical-record.html — медицинская запись
+  diary.html          — дневниковые записи
+  diagnoses.html      — диагнозы + AI-протоколы
+  assignments.html    — назначения + расписание
+  specialist-queue.html      — очередь специалиста
+  specialist-assignments.html — назначения специалиста
+  specialist-note.html       — запись о выполнении процедуры
+  psychologist-sheet.html    — лист психолога
+  data.js             — справочники (пациенты, процедуры)
+  storage.js          — localStorage API
+  specialist-common.js — общая логика специалистов
+
+scheduler-api/
+  main.py             — FastAPI (Claude прокси + schedule endpoint)
+  solver.py           — OR-Tools CP-SAT решатель
+  requirements.txt
 ```
 
 ---
