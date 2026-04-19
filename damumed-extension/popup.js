@@ -5,6 +5,7 @@ const testBtn   = document.getElementById('test-btn');
 const statusEl  = document.getElementById('status');
 const keyInput  = document.getElementById('claude-key');
 const modelSel  = document.getElementById('claude-model');
+const serverUrl = document.getElementById('server-url');
 const keyStatus = document.getElementById('key-status');
 
 function showStatus(text, kind = 'success') {
@@ -18,6 +19,7 @@ function showStatus(text, kind = 'success') {
   try {
     const resp = await chrome.runtime.sendMessage({ type: 'GET_SETTINGS' });
     if (!resp?.ok) return;
+    if (resp.serverUrl) serverUrl.value = resp.serverUrl;
     if (resp.hasKey) {
       keyInput.placeholder = '•••• ключ сохранён ••••';
       keyStatus.textContent = '✓ сохранён';
@@ -41,6 +43,8 @@ saveBtn.addEventListener('click', async () => {
     keyStatus.className = 'key-status ok';
   }
   await chrome.runtime.sendMessage({ type: 'SET_MODEL', model: modelSel.value });
+  const url = serverUrl.value.trim();
+  if (url) await chrome.runtime.sendMessage({ type: 'SET_SERVER_URL', serverUrl: url });
   showStatus('✓ Настройки сохранены', 'success');
 });
 

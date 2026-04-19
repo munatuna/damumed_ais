@@ -168,14 +168,18 @@
       if (cachedCreds?.apiKey) return cachedCreds;
       const resp = await sendExtensionMessage({ type: 'GET_SETTINGS_FOR_PROXY' });
       if (!resp?.apiKey) throw new Error('API_KEY_MISSING');
-      cachedCreds = { apiKey: resp.apiKey, model: resp.model };
+      cachedCreds = {
+        apiKey:    resp.apiKey,
+        model:     resp.model,
+        serverUrl: (resp.serverUrl || 'http://localhost:8001').replace(/\/$/, ''),
+      };
       return cachedCreds;
     }
 
     // Direct fetch to proxy — bypasses bridge entirely, no timeout issues
     async function queryLlm(payload) {
       const creds = await getCreds();
-      const resp = await fetch('http://localhost:8001/api/llm', {
+      const resp = await fetch(creds.serverUrl + '/api/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -803,7 +807,7 @@ outcome — итог лечения: "Улучшение", "Без переме�
     window.__damumedLlm = async function (payload) {
       const creds = await sendExtensionMessage({ type: 'GET_SETTINGS_FOR_PROXY' });
       if (!creds?.apiKey) throw new Error('API_KEY_MISSING');
-      const resp = await fetch('http://localhost:8001/api/llm', {
+      const resp = await fetch(creds.serverUrl + '/api/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

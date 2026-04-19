@@ -9,10 +9,12 @@ Endpoints:
 
 from __future__ import annotations
 from typing import List, Optional
+import os
 
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from solver import (
@@ -209,3 +211,9 @@ def generate_demo(req: DemoRequest):
         schedule = [_entry_to_out(e) for e in schedule],
         stats    = _build_stats(schedule),
     )
+
+
+# ── Static files (damumed-mock) — must be last ────────────────────────────────
+_mock_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'damumed-mock')
+if os.path.isdir(_mock_dir):
+    app.mount("/", StaticFiles(directory=_mock_dir, html=True), name="static")

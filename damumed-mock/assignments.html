@@ -796,7 +796,9 @@ if (_saved && _saved.length && _isNewFormat) {
 
 // ── OR-Tools Schedule Generator ──────────────────────────────────────────────
 
-const SCHEDULER_URL = 'http://localhost:8001/api/schedule';
+const SCHEDULER_URL = (window.location.port === '8001' || window.location.protocol === 'https:')
+  ? '/api/schedule'
+  : 'http://localhost:8001/api/schedule';
 
 // Map specialist name strings (from data.js) → OR-Tools type
 const SPEC_NAME_TO_TYPE = {

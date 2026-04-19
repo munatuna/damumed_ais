@@ -1,14 +1,15 @@
 // background.js — service worker (Manifest V3).
 // Claude API (Anthropic) — единственный провайдер.
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
-const PROXY_ENDPOINT = 'http://localhost:8001/api/llm';
+const DEFAULT_MODEL      = 'claude-haiku-4-5-20251001';
+const DEFAULT_SERVER_URL = 'http://localhost:8001';
 
 async function getSettings() {
-  const d = await chrome.storage.local.get(['claudeApiKey', 'claudeModel']);
+  const d = await chrome.storage.local.get(['claudeApiKey', 'claudeModel', 'serverUrl']);
   return {
-    apiKey: d.claudeApiKey || '',
-    model:  d.claudeModel  || DEFAULT_MODEL,
+    apiKey:    d.claudeApiKey || '',
+    model:     d.claudeModel  || DEFAULT_MODEL,
+    serverUrl: (d.serverUrl || DEFAULT_SERVER_URL).replace(/\/$/, ''),
   };
 }
 
@@ -29,15 +30,16 @@ async function callClaude({ systemPrompt, userMessage, pdfBase64, pdfMimeType },
     pdfMimeType:  pdfMimeType || null,
   };
 
+  const endpoint = settings.serverUrl + '/api/llm';
   let response;
   try {
-    response = await fetch(PROXY_ENDPOINT, {
+    response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
   } catch (e) {
-    throw new Error('NETWORK_ERROR: Сервер не запущен? Запустите localhost:8001');
+    throw new Error('NETWORK_ERROR: Сервер недоступен (' + endpoint + ')');
   }
 
   if (!response.ok) {
@@ -91,6 +93,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         await chrome.storage.local.set({ claudeModel: msg.model });
         sendResponse({ ok: true });
 
+      } else if (msg.type === 'SET_SERVER_URL') {
+        await chrome.storage.local.set({ serverUrl: msg.serverUrl || '' });
+        sendResponse({ ok: true });
+
       } else if (msg.type === 'GET_SETTINGS') {
         const s = await getSettings();
         sendResponse({
@@ -98,11 +104,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           provider:    'claude',
           hasKey:      Boolean(s.apiKey),
           model:       s.model,
+          serverUrl:   s.serverUrl,
         });
 
       } else if (msg.type === 'GET_SETTINGS_FOR_PROXY') {
         const s = await getSettings();
-        sendResponse({ ok: true, apiKey: s.apiKey, model: s.model });
+        sendResponse({ ok: true, apiKey: s.apiKey, model: s.model, serverUrl: s.serverUrl });
 
       } else if (msg.type === 'GET_API_KEY_STATUS') {
         const s = await getSettings();
