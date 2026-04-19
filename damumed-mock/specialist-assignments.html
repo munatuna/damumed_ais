@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Мои назначения - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<div class="dmed-container">
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a href="#" id="queue-link">Кабинет специалиста</a>
+    <span class="separator">›</span>
+    <span>Мои назначения</span>
+  </div>
+
+  <div class="specialist-toolbar">
+    <div>
+      <h2 style="margin:0 0 4px 0;">Назначенные процедуры</h2>
+      <div class="text-muted" id="specialist-subtitle"></div>
+    </div>
+  </div>
+
+  <div id="assignments-root" class="assignment-stack"></div>
+</div>
+
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script src="specialist-common.js"></script>
+<script>
+  const specialist = window.DmedSpecialist.getSpecialistFromUrl();
+  document.getElementById('nav-root').innerHTML = window.DmedSpecialist.buildSpecialistNav('assignments', specialist.id);
+  document.getElementById('specialist-subtitle').textContent = `${specialist.name} · ${specialist.role} · Все назначения на курс`;
+  document.getElementById('queue-link').href = `specialist-queue.html?specialist=${specialist.id}`;
+  document.title = `Мои назначения - ${specialist.role}`;
+
+  const items = window.DmedSpecialist.getAssignmentsForSpecialist(specialist.id, 'upcoming');
+  const root = document.getElementById('assignments-root');
+
+  if (!items.length) {
+    root.innerHTML = `<div class="empty-state">Назначения для ${specialist.role.toLowerCase()} не найдены.</div>`;
+  } else {
+    items.forEach(item => {
+      const p = item.patient;
+      const noteCount = window.DmedStorage.getSpecialistNotesByCode(p.id, specialist.id, item.code).length;
+      const statusBadge = item.status === 'done'
+        ? '<span class="badge badge-success">Выполнено</span>'
+        : item.isToday
+          ? '<span class="badge badge-warning">На сегодня</span>'
+          : '<span class="badge badge-info">Запланировано</span>';
+
+      const href = specialist.id === 'psychologist'
+        ? `psychologist-sheet.html?specialist=${specialist.id}&id=${p.id}`
+        : `specialist-note.html?specialist=${specialist.id}&id=${p.id}&code=${item.code}&day=${item.dayIdx}`;
+
+      const card = document.createElement('div');
+      card.className = 'assignment-card';
+      card.innerHTML = `
+        <div class="topline">
+          <div>
+            <h3 class="title">${item.procedure.name}</h3>
+            <div class="meta">${p.fullName} · Карта № ${p.id} · ${window.DmedSpecialist.formatDayLabel(p, item.dayIdx)}</div>
+            <div class="meta">${item.procedure.slot} · ${item.procedure.room} · ${item.procedure.duration} мин.</div>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+        <div class="meta">${p.admissionDiagnosisClarify || p.admissionDiagnosisMain}</div>
+        <div class="footer">
+          <div class="meta">Сохранённых заметок: <strong>${noteCount}</strong></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a class="btn btn-primary btn-sm" href="${href}">${specialist.id === 'psychologist' ? 'Лист психолога' : 'Открыть запись'}</a>
+            <a class="btn btn-sm" href="patient.html?id=${p.id}">Карта пациента</a>
+          </div>
+        </div>
+      `;
+      root.appendChild(card);
+    });
+  }
+</script>
+</body>
+</html>

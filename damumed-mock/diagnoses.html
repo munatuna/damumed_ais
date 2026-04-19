@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Диагнозы - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .diagnoses-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--dmed-surface-strong);
+    border-bottom: 1px solid var(--dmed-border);
+  }
+  .btn-add-diag {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--dmed-success);
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 2px 6px rgba(10,110,82,0.25);
+    transition: background 0.15s;
+  }
+  .btn-add-diag:hover { background: #277653; }
+
+  .diag-table { font-size: 13px; }
+  .diag-table td { padding: 12px 14px; vertical-align: middle; }
+  .diag-date { color: var(--dmed-muted); font-size: 12px; white-space: nowrap; }
+  .diag-type-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #dff3f5;
+    color: var(--dmed-primary);
+    border: 1px solid var(--dmed-primary-muted);
+    white-space: nowrap;
+  }
+  .diag-icd { font-weight: 600; color: var(--dmed-text); }
+  .diag-name { color: var(--dmed-muted); font-size: 12px; margin-top: 2px; }
+
+  .btn-protocol {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 12px;
+    background: var(--dmed-surface);
+    border: 1px solid #c2d1d5;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--dmed-text);
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .btn-protocol:hover { background: #e8eff0; }
+  .btn-protocol .arrow { font-size: 10px; color: var(--dmed-muted); }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal-dialog {
+    background: #fff;
+    border-radius: 8px;
+    width: 640px;
+    max-width: 96vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+  .modal-header {
+    background: #1a6b7c;
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .modal-body {
+    padding: 20px 24px 16px;
+  }
+  .modal-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .modal-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .modal-field label {
+    display: block;
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .modal-field .form-control {
+    font-size: 13px;
+    padding: 5px 9px;
+    border-radius: 4px;
+    border: 1px solid #c2d1d5;
+    width: 100%;
+  }
+  .modal-field select.form-control {
+    background: #fff;
+    appearance: auto;
+    -webkit-appearance: auto;
+  }
+  .date-input-wrap {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .date-input-wrap .form-control { flex: 1; }
+  .date-input-wrap .cal-btn {
+    width: 30px; height: 30px;
+    border: 1px solid #c2d1d5;
+    border-radius: 4px;
+    background: var(--dmed-surface);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .modal-field-full { margin-bottom: 14px; }
+  .modal-field-full label {
+    display: block;
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .modal-field-full .form-control { font-size: 13px; }
+
+  .modal-footer-note {
+    font-size: 11px;
+    color: #777;
+    padding: 8px 24px 12px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .modal-footer-note::before {
+    content: "●";
+    color: var(--dmed-success);
+    font-size: 8px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 24px 18px;
+  }
+  .modal-actions .btn-cancel {
+    padding: 7px 18px;
+    border: 1px solid #c2d1d5;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    color: #444;
+  }
+  .modal-actions .btn-save {
+    padding: 7px 22px;
+    border: none;
+    border-radius: 6px;
+    background: #1a6b7c;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .modal-actions .btn-save:hover { background: #155965; }
+
+  .pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--dmed-muted);
+    border-top: 1px solid var(--dmed-border);
+    background: var(--dmed-surface-strong);
+  }
+  .pager { display: flex; gap: 4px; align-items: center; }
+  .pager-btn {
+    width: 26px; height: 26px;
+    border: 1px solid #c2d1d5;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pager-btn.active { background: var(--dmed-primary); color: #fff; border-color: var(--dmed-primary); }
+  .pager-btn:hover:not(.active) { background: #e8eff0; }
+
+  /* Protocol modal */
+  .proto-modal-dialog {
+    background: #fff;
+    border-radius: 8px;
+    width: 780px;
+    max-width: 97vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+  .proto-modal-dialog .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .proto-modal-dialog .modal-header .proto-close {
+    background: transparent; border: none; color: #fff;
+    font-size: 22px; cursor: pointer; line-height: 1; opacity: .8;
+  }
+  .proto-modal-dialog .modal-header .proto-close:hover { opacity: 1; }
+  .proto-body {
+    overflow-y: auto;
+    padding: 20px 24px;
+    flex: 1;
+    font-size: 13px;
+  }
+  .proto-loading {
+    text-align: center;
+    padding: 40px 0;
+    color: #1a6b7c;
+    font-size: 14px;
+  }
+  .proto-loading .spinner {
+    display: inline-block;
+    width: 32px; height: 32px;
+    border: 3px solid #dff3f5;
+    border-top-color: #1a6b7c;
+    border-radius: 50%;
+    animation: proto-spin 0.9s linear infinite;
+    margin-bottom: 12px;
+  }
+  @keyframes proto-spin { to { transform: rotate(360deg); } }
+  .proto-section { margin-bottom: 16px; }
+  .proto-section label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a6b7c;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 5px;
+  }
+  .proto-section textarea {
+    width: 100%;
+    border: 1px solid #c2d1d5;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: vertical;
+    box-sizing: border-box;
+    background: #fafcfc;
+  }
+  .proto-section textarea:focus { outline: none; border-color: #1a6b7c; background: #fff; }
+  .proto-section textarea.short { height: 56px; }
+  .proto-section textarea.medium { height: 90px; }
+  .proto-section textarea.tall { height: 120px; }
+  .proto-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .proto-ai-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fffbe6; border: 1px solid #e0c84a;
+    border-radius: 12px; padding: 2px 10px;
+    font-size: 11px; color: #7a6010; margin-left: 8px;
+  }
+  .proto-error {
+    color: #c4544d; background: #fce8e8;
+    padding: 14px 18px; border-radius: 6px; font-size: 13px;
+  }
+
+  /* ICD search dropdown */
+  .icd-wrap { position: relative; }
+  .icd-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: #fff;
+    border: 1px solid #c2d1d5;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    z-index: 10;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .icd-dropdown.open { display: block; }
+  .icd-item {
+    padding: 8px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .icd-item:hover { background: #f0f7f8; }
+  .icd-item .icd-code { font-weight: 600; color: var(--dmed-primary); margin-right: 6px; }
+</style>
+</head>
+<body>
+
+<nav class="dmed-navbar">
+  <div class="logo">Dmed.Стационар</div>
+  <ul class="nav-menu">
+    <li><a href="index.html">Мои пациенты</a></li>
+    <li><a href="patient.html?id=" id="nav-patient-link" class="active">Карта пациента</a></li>
+    <li><a href="reports.html">Отчёты</a></li>
+    <li><a href="directories.html">Справочники</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="name" id="nav-doctor-name">МАХМУТХАН А.М.</div>
+    <div id="nav-doctor-role">Реабилитолог | РЦ «Акбобек»</div>
+  </div>
+</nav>
+
+<div class="dmed-container">
+
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a href="index.html">Мои пациенты</a>
+    <span class="separator">›</span>
+    <a href="#" id="breadcrumb-patient"></a>
+    <span class="separator">›</span>
+    <span>Диагнозы</span>
+  </div>
+
+  <!-- Шапка пациента -->
+  <div class="patient-header">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>ИИН: <span id="patient-iin"></span></span>
+        <span>Д.р.: <span id="patient-bd"></span></span>
+        <span>Возраст: <span id="patient-age"></span></span>
+        <span>Палата: <span id="patient-ward"></span></span>
+      </div>
+      <div class="patient-meta mt-2">
+        <span>Поступил: <strong id="patient-admission"></strong></span>
+        <span>День курса: <strong id="patient-day"></strong></span>
+        <span>Лечащий врач: <span id="patient-doctor"></span></span>
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <div><small class="text-muted">Диагноз основной:</small></div>
+      <div><strong id="patient-diagnosis-main"></strong></div>
+      <div><small class="text-muted">Уточняющий:</small></div>
+      <div id="patient-diagnosis-clarify"></div>
+    </div>
+  </div>
+
+  <!-- Вкладки -->
+  <ul class="dmed-tabs" id="mh-navigation">
+    <li><a href="patient.html?id="      id="tab-main"        data-tab="main">Главная</a></li>
+    <li><a href="medical-record.html?id=" id="tab-medical"   data-tab="medical">Медицинские записи</a></li>
+    <li><a href="diagnoses.html?id="    id="tab-diagnoses"   data-tab="diagnoses" class="active">Диагнозы</a></li>
+    <li><a href="assignments.html?id="  id="tab-assignments" data-tab="assignments">Назначения</a></li>
+    <li><a href="diary.html?id="        id="tab-diary"       data-tab="diary">Дневниковые записи</a></li>
+    <li><a href="#" onclick="return false;" id="tab-operations">Операции</a></li>
+    <li><a href="#" onclick="return false;" id="tab-vitals">Показатели здоровья</a></li>
+    <li><a href="#" onclick="return false;" id="tab-documents">Документы</a></li>
+    <li><a href="#" onclick="return false;">Прочее ▾</a></li>
+  </ul>
+
+  <!-- Панель диагнозов -->
+  <div class="dmed-panel" style="border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 0;">
+
+    <!-- Тулбар с кнопкой + -->
+    <div class="diagnoses-toolbar">
+      <button class="btn-add-diag" id="btn-add" title="Добавить диагноз">+</button>
+    </div>
+
+    <!-- Таблица диагнозов -->
+    <table class="dmed-table diag-table" id="diag-table">
+      <tbody id="diag-tbody">
+        <!-- заполняется JS -->
+      </tbody>
+    </table>
+
+    <!-- Пагинация -->
+    <div class="pagination-bar">
+      <div class="pager">
+        <button class="pager-btn">◀</button>
+        <button class="pager-btn active">1</button>
+        <button class="pager-btn">▶</button>
+      </div>
+      <div id="pager-count">Отображены записи 1 — <span id="diag-count">0</span> из <span id="diag-total">0</span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span>На странице:</span>
+        <select class="form-control" style="width:60px;padding:3px 5px;font-size:12px;">
+          <option>10</option><option>25</option><option>50</option>
+        </select>
+        <button class="pager-btn" title="Обновить">↺</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ====== МОДАЛКА ДОБАВЛЕНИЯ ДИАГНОЗА ====== -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-dialog">
+    <div class="modal-header">Диагноз</div>
+    <div class="modal-body">
+
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Дата заболевания</label>
+          <div class="date-input-wrap">
+            <input type="date" class="form-control" id="f-date-illness" />
+            <button class="cal-btn" onclick="document.getElementById('f-date-illness').showPicker()">📅</button>
+          </div>
+        </div>
+        <div class="modal-field">
+          <label>Вид</label>
+          <select class="form-control" id="f-kind">
+            <option value=""></option>
+            <option>Плановая госпитализация</option>
+            <option>Экстренная госпитализация</option>
+            <option>Амбулаторное лечение</option>
+            <option>Дневной стационар</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Тип диагноза</label>
+          <select class="form-control" id="f-diag-type">
+            <option value=""></option>
+            <option>Основной</option>
+            <option>Сопутствующий</option>
+            <option>Осложнение</option>
+            <option>Направительный</option>
+            <option>Заключительный</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-row-2">
+        <div class="modal-field">
+          <label>МКБ-10</label>
+          <div class="icd-wrap">
+            <input type="text" class="form-control" id="f-icd" placeholder="Код или название..." autocomplete="off" />
+            <div class="icd-dropdown" id="icd-dropdown"></div>
+          </div>
+        </div>
+        <div class="modal-field">
+          <label>Дата регистрации</label>
+          <div class="date-input-wrap">
+            <input type="date" class="form-control" id="f-date-reg" />
+            <button class="cal-btn" onclick="document.getElementById('f-date-reg').showPicker()">📅</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-row-2">
+        <div class="modal-field">
+          <label>Вид травмы</label>
+          <select class="form-control" id="f-injury">
+            <option value=""></option>
+            <option>Производственная травма</option>
+            <option>Бытовая травма</option>
+            <option>ДТП</option>
+            <option>Спортивная травма</option>
+            <option>Нет</option>
+          </select>
+        </div>
+        <div class="modal-field" style="visibility: hidden;"></div>
+      </div>
+
+      <div class="modal-field-full">
+        <label>Примечание</label>
+        <textarea class="form-control" id="f-note" rows="3" placeholder="Дополнительная информация..."></textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer-note" id="modal-timestamp"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancel">Отменить</button>
+      <button class="btn-save" id="btn-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== МОДАЛКА ПРОТОКОЛА ЛЕЧЕНИЯ ====== -->
+<div class="modal-overlay" id="proto-overlay">
+  <div class="proto-modal-dialog">
+    <div class="modal-header">
+      <span id="proto-title">Протокол лечения</span>
+      <span class="proto-ai-badge">✨ Claude AI</span>
+      <button class="proto-close" id="proto-close">×</button>
+    </div>
+
+    <div class="proto-body" id="proto-body">
+      <!-- Loading / content / error вставляется через JS -->
+    </div>
+
+    <div class="modal-actions" id="proto-actions" style="display:none;">
+      <button class="btn-cancel" id="proto-cancel-btn">Закрыть</button>
+      <button class="btn-save" id="proto-save-btn">💾 Сохранить протокол</button>
+    </div>
+  </div>
+</div>
+
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script>
+const ICD_DICT = [
+  { code: 'Z86.6', name: 'В личном анамнезе болезни нервной системы и органов чувств' },
+  { code: 'Z87.0', name: 'В личном анамнезе болезни органов дыхания' },
+  { code: 'G93.2', name: 'Доброкачественная внутричерепная гипертензия' },
+  { code: 'G93.4', name: 'Энцефалопатия неуточнённая' },
+  { code: 'J41.0', name: 'Простой хронический бронхит' },
+  { code: 'J45.0', name: 'Бронхиальная астма, преимущественно аллергическая' },
+  { code: 'G80.0', name: 'Спастический церебральный паралич' },
+  { code: 'G80.1', name: 'Спастическая диплегия' },
+  { code: 'F84.0', name: 'Детский аутизм' },
+  { code: 'F80.1', name: 'Расстройство экспрессивной речи' },
+  { code: 'Q20.3', name: 'Дискордантное желудочково-артериальное соединение' },
+  { code: 'I50.0', name: 'Застойная сердечная недостаточность' },
+  { code: 'M41.1', name: 'Юношеский идиопатический сколиоз' },
+  { code: 'M54.5', name: 'Боль в нижней части спины' },
+  { code: 'Z03.6', name: 'Наблюдение при подозрении на токсическое действие веществ, проглоченных с пищей' },
+];
+
+// URL params
+const params = new URLSearchParams(window.location.search);
+const patientId = params.get('id') || '352';
+const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+
+// Populate header
+document.getElementById('patient-name').textContent = patient.fullName;
+document.getElementById('patient-id').textContent = patient.id;
+document.getElementById('patient-iin').textContent = patient.iin;
+document.getElementById('patient-bd').textContent = patient.birthDate;
+document.getElementById('patient-age').textContent = patient.age + ' лет';
+document.getElementById('patient-ward').textContent = patient.ward;
+document.getElementById('patient-admission').textContent = patient.admissionDate + ' ' + (patient.admissionTime || '');
+document.getElementById('patient-day').textContent = patient.currentDay + '/14';
+document.getElementById('patient-doctor').textContent = patient.doctorShort;
+document.getElementById('patient-diagnosis-main').textContent = patient.admissionDiagnosisMain;
+document.getElementById('patient-diagnosis-clarify').textContent = patient.admissionDiagnosisClarify;
+document.getElementById('breadcrumb-patient').textContent = patient.fullName;
+document.getElementById('breadcrumb-patient').href = 'patient.html?id=' + patient.id;
+document.title = 'Диагнозы — ' + patient.fullName;
+
+// Wire up tab links with patient id
+document.querySelectorAll('.dmed-tabs a[href]').forEach(a => {
+  if (!a.href.includes('#') && a.id !== 'tab-main') {
+    const url = new URL(a.href, location.href);
+    url.searchParams.set('id', patientId);
+    a.href = url.toString();
+  }
+});
+document.getElementById('tab-main').href = 'patient.html?id=' + patientId;
+document.getElementById('nav-patient-link').href = 'patient.html?id=' + patientId;
+document.getElementById('nav-doctor-name').textContent = patient.doctorShort || 'МАХМУТХАН А.М.';
+
+// Build default diagnoses from patient data
+function buildDefaultDiagnoses(p) {
+  const list = [];
+  const admDate = p.admissionDate || '01.04.2026';
+  // Parse main and clarify diagnoses
+  function parseDiag(str, type) {
+    if (!str) return null;
+    const m = str.match(/^\(([^)]+)\)\s*(.+)$/);
+    if (m) return { icd: m[1], name: m[2].trim(), type, date: admDate };
+    return { icd: '—', name: str, type, date: admDate };
+  }
+  const main = parseDiag(p.admissionDiagnosisMain, 'Направительный, Основной');
+  const clarify = parseDiag(p.admissionDiagnosisClarify, 'Заключительный, Основной');
+  if (main) list.push(main);
+  if (clarify) list.push({ ...clarify, type: 'Направительный, Уточнение' });
+  // Add final versions
+  if (main) list.push({ ...main, type: 'Заключительный, Основной' });
+  if (clarify) list.push({ ...clarify, type: 'Заключительный, Уточнение' });
+  return list;
+}
+
+// Storage key for this patient's diagnoses
+const STORAGE_KEY = 'dmed_diagnoses_' + patientId;
+
+function loadDiagnoses() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return buildDefaultDiagnoses(patient);
+}
+
+function saveDiagnoses(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+let diagnoses = loadDiagnoses();
+
+function renderTable() {
+  const tbody = document.getElementById('diag-tbody');
+  tbody.innerHTML = '';
+  diagnoses.forEach((d, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="width:150px;">
+        <div class="diag-date">${d.date}</div>
+        <div style="margin-top:4px;"><span class="diag-type-badge">${d.type}</span></div>
+      </td>
+      <td>
+        <div class="diag-icd">${d.icd} ${d.name ? '— ' + d.name.slice(0, 70) + (d.name.length > 70 ? '...' : '') : ''}</div>
+        ${d.note ? `<div class="diag-name">${d.note}</div>` : ''}
+      </td>
+      <td style="width:160px; text-align:right;">
+        <button class="btn-protocol" onclick="openProtocol(diagnoses[${idx}])">
+          ✨ Протокол лечения <span class="arrow">▼</span>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('diag-count').textContent = diagnoses.length;
+  document.getElementById('diag-total').textContent = diagnoses.length;
+}
+
+renderTable();
+
+// ── Модалка ──
+const overlay = document.getElementById('modal-overlay');
+const btnAdd = document.getElementById('btn-add');
+const btnCancel = document.getElementById('btn-cancel');
+const btnSave = document.getElementById('btn-save');
+
+function openModal() {
+  // Set today's date as default
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('f-date-illness').value = today;
+  document.getElementById('f-date-reg').value = today;
+  document.getElementById('f-diag-type').value = '';
+  document.getElementById('f-kind').value = '';
+  document.getElementById('f-icd').value = '';
+  document.getElementById('f-injury').value = '';
+  document.getElementById('f-note').value = '';
+
+  // Timestamp note
+  const now = new Date();
+  const fmt = now.toLocaleDateString('ru', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+              now.toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
+  document.getElementById('modal-timestamp').textContent =
+    `Системная дата на момент открытия: ${fmt}. В системе будет зафиксирована дата и время сохранения формы.`;
+
+  overlay.classList.add('open');
+}
+
+function closeModal() {
+  overlay.classList.remove('open');
+}
+
+btnAdd.addEventListener('click', openModal);
+btnCancel.addEventListener('click', closeModal);
+overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+btnSave.addEventListener('click', () => {
+  const icdRaw = document.getElementById('f-icd').value.trim();
+  const diagType = document.getElementById('f-diag-type').value;
+  const kind = document.getElementById('f-kind').value;
+  const dateIllness = document.getElementById('f-date-illness').value;
+  const note = document.getElementById('f-note').value.trim();
+
+  if (!icdRaw && !diagType) {
+    alert('Заполните МКБ-10 или тип диагноза.');
+    return;
+  }
+
+  // Format date
+  let dateStr = '—';
+  if (dateIllness) {
+    const d = new Date(dateIllness);
+    dateStr = d.toLocaleDateString('ru', {day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+
+  // Parse ICD
+  let icdCode = '—', icdName = icdRaw;
+  const icdMatch = ICD_DICT.find(x => icdRaw.toUpperCase().startsWith(x.code.toUpperCase()) || icdRaw.toLowerCase().includes(x.name.toLowerCase().slice(0,15)));
+  if (icdMatch) { icdCode = icdMatch.code; icdName = icdMatch.name; }
+  else {
+    const m = icdRaw.match(/^([A-Z]\d+[\.\d]*)\s*(.*)/i);
+    if (m) { icdCode = m[1].toUpperCase(); icdName = m[2]; }
+  }
+
+  const typeLabel = [kind, diagType].filter(Boolean).join(', ') || 'Основной';
+
+  const entry = { icd: icdCode, name: icdName, type: typeLabel, date: dateStr, note };
+  diagnoses.unshift(entry);
+  saveDiagnoses(diagnoses);
+  renderTable();
+  closeModal();
+});
+
+// ICD search
+const icdInput = document.getElementById('f-icd');
+const icdDropdown = document.getElementById('icd-dropdown');
+
+icdInput.addEventListener('input', () => {
+  const q = icdInput.value.trim().toLowerCase();
+  if (!q) { icdDropdown.classList.remove('open'); return; }
+  const results = ICD_DICT.filter(x =>
+    x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q)
+  ).slice(0, 8);
+  if (!results.length) { icdDropdown.classList.remove('open'); return; }
+  icdDropdown.innerHTML = results.map(x =>
+    `<div class="icd-item" data-code="${x.code}" data-name="${x.name}">
+      <span class="icd-code">${x.code}</span>${x.name}
+    </div>`
+  ).join('');
+  icdDropdown.classList.add('open');
+});
+
+icdDropdown.addEventListener('click', (e) => {
+  const item = e.target.closest('.icd-item');
+  if (!item) return;
+  icdInput.value = item.dataset.code + ' ' + item.dataset.name;
+  icdDropdown.classList.remove('open');
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.icd-wrap')) icdDropdown.classList.remove('open');
+});
+
+// Expose for voice agent
+window.diagnoses = diagnoses;
+window.openProtocol = openProtocol;
+
+// Handle voice navigation params
+(function handleVoiceParams() {
+  const vp = new URLSearchParams(window.location.search);
+  if (vp.get('voice_add') === '1') {
+    setTimeout(() => {
+      btnAdd.click();
+      setTimeout(() => {
+        const icd = vp.get('icd'), name = vp.get('name'), dtype = vp.get('dtype');
+        if (icd || name) fillField('#f-icd', (icd ? icd + ' ' : '') + (name || ''));
+        if (dtype) fillField('#f-diag-type', dtype);
+        setTimeout(() => document.getElementById('btn-save')?.click(), 400);
+      }, 150);
+    }, 500);
+  }
+  if (vp.get('voice_proto') === '1') {
+    setTimeout(() => {
+      if (diagnoses.length) openProtocol(diagnoses[0]);
+    }, 600);
+  }
+})();
+
+function fillField(sel, val) {
+  if (!val) return;
+  const el = document.querySelector(sel);
+  if (!el) return;
+  el.value = val;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// ── Протокол лечения ────────────────────────────────────────────────────────
+const protoOverlay = document.getElementById('proto-overlay');
+const protoBody    = document.getElementById('proto-body');
+const protoActions = document.getElementById('proto-actions');
+
+document.getElementById('proto-close').addEventListener('click', closeProto);
+document.getElementById('proto-cancel-btn').addEventListener('click', closeProto);
+protoOverlay.addEventListener('click', (e) => { if (e.target === protoOverlay) closeProto(); });
+
+function closeProto() {
+  protoOverlay.classList.remove('open');
+  protoBody.innerHTML = '';
+  protoActions.style.display = 'none';
+}
+
+function openProtocol(diag) {
+  document.getElementById('proto-title').textContent = 'Протокол лечения — ' + diag.icd;
+  protoBody.innerHTML = `
+    <div class="proto-loading">
+      <div class="spinner"></div>
+      <div>Claude генерирует протокол...</div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">Анализирую данные пациента и диагноз</div>
+    </div>`;
+  protoActions.style.display = 'none';
+  protoOverlay.classList.add('open');
+
+  generateProtocol(diag).then(data => {
+    renderProtocol(data, diag);
+    protoActions.style.display = 'flex';
+  }).catch(err => {
+    protoBody.innerHTML = `<div class="proto-error">
+      ❌ Ошибка генерации протокола:<br><br>${err.message}<br><br>
+      Убедитесь что:<br>
+      • Расширение Damumed установлено и API-ключ введён<br>
+      • Сервер запущен на localhost:8001
+    </div>`;
+  });
+}
+
+async function generateProtocol(diag) {
+  if (!window.__damumedLlm) throw new Error('Расширение Damumed не загружено. Обновите страницу.');
+
+  // Gather all available patient data
+  const diaries   = window.DmedStorage.getDiaries(patientId);
+  const records   = window.DmedStorage.getRecordsIndex(patientId);
+  const extra     = window.DmedStorage.getPatientExtra(patientId);
+  const vt        = patient.vitals || {};
+
+  const patientContext = `
+ФИО: ${patient.fullName}
+ИИН: ${patient.iin}
+Дата рождения: ${patient.birthDate}, возраст: ${patient.age} лет
+Пол: ${patient.gender || 'не указан'}
+Палата/отделение: ${patient.ward}
+Дата поступления: ${patient.admissionDate} ${patient.admissionTime || ''}
+День курса: ${patient.currentDay} из 14
+Лечащий врач: ${patient.attendingDoctor || patient.doctorShort}
+Диагноз основной: ${patient.admissionDiagnosisMain}
+Диагноз уточняющий: ${patient.admissionDiagnosisClarify || 'нет'}
+Жалобы при поступлении: ${patient.complaints || 'не указаны'}
+Витальные показатели: вес ${vt.weight||'?'} кг, рост ${vt.height||'?'} см, t° ${vt.temperature||'?'}°C, пульс ${vt.pulse||'?'} уд/мин, АД ${vt.pressureTop||'?'}/${vt.pressureBottom||'?'} мм рт.ст., SpO2 ${vt.saturation||'?'}%, ЧДД ${vt.breath||'?'}/мин
+${diaries.length ? 'Последний дневник: ' + diaries[0].subjective + ' / ' + diaries[0].objective : ''}
+${records.length ? 'Имеющиеся записи: ' + records.map(r=>r.typeLabel).join(', ') : ''}
+${extra.bloodGroup ? 'Группа крови: ' + extra.bloodGroup : ''}
+  `.trim();
+
+  const systemPrompt = `Ты — опытный врач-реабилитолог казахстанского реабилитационного центра «Акбобек».
+Составь протокол лечения на основе данных пациента. Отвечай ТОЛЬКО JSON без markdown.
+
+Верни JSON строго следующей структуры:
+{
+  "complaints": "жалобы пациента",
+  "anamnesis": "анамнез болезни (краткий, по данным)",
+  "objective": "объективный статус: общее состояние, витальные показатели, данные осмотра",
+  "diagnosis": "полная формулировка диагноза с МКБ-кодом",
+  "goals": "цели реабилитационного лечения (3-5 пунктов)",
+  "nonDrug": "немедикаментозное лечение: ЛФК, физиотерапия, массаж, эрготерапия, логопедия — конкретные методы",
+  "drug": "медикаментозное лечение: препараты, дозы, курс",
+  "monitoring": "план наблюдения и контрольные осмотры",
+  "recommendations": "рекомендации при выписке"
+}`;
+
+  return window.__damumedLlm({
+    systemPrompt,
+    userMessage: `Данные пациента:\n${patientContext}\n\nДиагноз для протокола: ${diag.icd} — ${diag.name}\nТип: ${diag.type}`
+  });
+}
+
+function renderProtocol(data, diag) {
+  const f = (val) => (val || '').toString();
+  protoBody.innerHTML = `
+    <div class="proto-section">
+      <label>Жалобы</label>
+      <textarea class="medium" id="pf-complaints">${f(data.complaints)}</textarea>
+    </div>
+    <div class="proto-section">
+      <label>Анамнез болезни</label>
+      <textarea class="medium" id="pf-anamnesis">${f(data.anamnesis)}</textarea>
+    </div>
+    <div class="proto-section">
+      <label>Объективный статус</label>
+      <textarea class="tall" id="pf-objective">${f(data.objective)}</textarea>
+    </div>
+    <div class="proto-section">
+      <label>Диагноз</label>
+      <textarea class="short" id="pf-diagnosis">${f(data.diagnosis)}</textarea>
+    </div>
+    <div class="proto-grid-2">
+      <div class="proto-section">
+        <label>Цели лечения</label>
+        <textarea class="tall" id="pf-goals">${f(data.goals)}</textarea>
+      </div>
+      <div class="proto-section">
+        <label>Медикаментозное лечение</label>
+        <textarea class="tall" id="pf-drug">${f(data.drug)}</textarea>
+      </div>
+    </div>
+    <div class="proto-section">
+      <label>Немедикаментозное лечение (ЛФК, физиотерапия, массаж)</label>
+      <textarea class="tall" id="pf-nondrug">${f(data.nonDrug)}</textarea>
+    </div>
+    <div class="proto-grid-2">
+      <div class="proto-section">
+        <label>Наблюдение</label>
+        <textarea class="medium" id="pf-monitoring">${f(data.monitoring)}</textarea>
+      </div>
+      <div class="proto-section">
+        <label>Рекомендации при выписке</label>
+        <textarea class="medium" id="pf-recommendations">${f(data.recommendations)}</textarea>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('proto-save-btn').onclick = () => saveProtocol(diag);
+}
+
+function saveProtocol(diag) {
+  const protocol = {
+    diagIcd:         diag.icd,
+    diagName:        diag.name,
+    savedAt:         new Date().toISOString(),
+    complaints:      document.getElementById('pf-complaints').value,
+    anamnesis:       document.getElementById('pf-anamnesis').value,
+    objective:       document.getElementById('pf-objective').value,
+    diagnosis:       document.getElementById('pf-diagnosis').value,
+    goals:           document.getElementById('pf-goals').value,
+    nonDrug:         document.getElementById('pf-nondrug').value,
+    drug:            document.getElementById('pf-drug').value,
+    monitoring:      document.getElementById('pf-monitoring').value,
+    recommendations: document.getElementById('pf-recommendations').value,
+  };
+  const key = 'dmed_protocol_' + patientId + '_' + diag.icd.replace(/\W/g,'');
+  localStorage.setItem(key, JSON.stringify(protocol));
+  closeProto();
+  alert('Протокол сохранён ✓');
+}
+</script>
+</body>
+</html>

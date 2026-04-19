@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Лист психолога - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<div class="dmed-container">
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a id="back-queue" href="#">Кабинет специалиста</a>
+    <span class="separator">›</span>
+    <span>Лист психолога</span>
+  </div>
+
+  <div class="patient-header">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>Возраст: <span id="patient-age"></span></span>
+        <span>Диагноз: <span id="patient-diagnosis"></span></span>
+      </div>
+    </div>
+    <div><span class="badge badge-info">Лист психолога</span></div>
+  </div>
+
+  <div class="dmed-panel">
+    <div class="dmed-panel-heading">
+      <h3>Психологическое обследование и план работы</h3>
+      <small class="text-muted">На основе реального шаблона специалиста</small>
+    </div>
+    <div class="dmed-panel-body">
+      <div class="sheet-grid" id="sheet-grid"></div>
+
+      <div class="row mt-3">
+        <div class="col-6">
+          <div class="form-group">
+            <label for="developmentLevel">Уровень психологического развития</label>
+            <textarea id="developmentLevel" class="form-control"></textarea>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="form-group">
+            <label for="workPlan">План работы</label>
+            <textarea id="workPlan" class="form-control"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-3">
+          <div class="form-group">
+            <label for="plannedSessions">Количество планируемых занятий</label>
+            <input id="plannedSessions" class="form-control" type="number" min="1" max="20">
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-success" id="save-sheet">Сохранить лист психолога</button>
+        <a class="btn" id="open-note" href="#">Открыть запись выполнения</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script src="specialist-common.js"></script>
+<script>
+  const specialist = window.SPECIALISTS.psychologist;
+  const params = new URLSearchParams(window.location.search);
+  const patient = window.DmedSpecialist.getPatientById(params.get('id'));
+  const stored = window.DmedStorage.getPsychologistSheet(patient.id) || {};
+  const model = Object.assign({}, window.PSYCHOLOGIST_SHEET_TEMPLATE, stored);
+
+  document.getElementById('nav-root').innerHTML = window.DmedSpecialist.buildSpecialistNav('assignments', specialist.id);
+  document.getElementById('back-queue').href = `specialist-queue.html?specialist=${specialist.id}`;
+  document.getElementById('open-note').href = `specialist-note.html?specialist=${specialist.id}&id=${patient.id}&code=A02.070.000&day=${window.DmedSpecialist.getTodayDayIndex(patient)}`;
+  document.getElementById('patient-name').textContent = patient.fullName;
+  document.getElementById('patient-id').textContent = patient.id;
+  document.getElementById('patient-age').textContent = `${patient.age} лет`;
+  document.getElementById('patient-diagnosis').textContent = patient.admissionDiagnosisClarify || patient.admissionDiagnosisMain;
+  document.title = `Лист психолога - ${patient.fullName}`;
+
+  const fields = [
+    ['mobility', 'Двигательные возможности'],
+    ['hearing', 'Состояние слуха'],
+    ['vision', 'Состояние зрения'],
+    ['dominantHand', 'Ведущая рука'],
+    ['handFunction', 'Манипулятивная функция рук'],
+    ['contact', 'Контакт'],
+    ['emotional', 'Эмоционально-волевая сфера'],
+    ['attention', 'Внимание'],
+    ['reactionToRemarks', 'Реакция на замечания'],
+    ['cognitiveActivity', 'Познавательная активность'],
+    ['instructionUnderstanding', 'Понимание инструкции'],
+    ['sensoryPerception', 'Сенсорное восприятие'],
+    ['memory', 'Память'],
+    ['thinking', 'Мышление'],
+    ['generalization', 'Обобщение'],
+    ['extraObject', 'Выделение лишнего'],
+    ['speech', 'Речевая деятельность']
+  ];
+
+  const grid = document.getElementById('sheet-grid');
+  fields.forEach(([key, label]) => {
+    const item = document.createElement('div');
+    item.className = 'sheet-field';
+    item.innerHTML = `
+      <label for="${key}">${label}</label>
+      <input id="${key}" class="form-control" value="${String(model[key] || '').replace(/"/g, '&quot;')}">
+    `;
+    grid.appendChild(item);
+  });
+
+  document.getElementById('developmentLevel').value = model.developmentLevel || '';
+  document.getElementById('workPlan').value = model.workPlan || '';
+  document.getElementById('plannedSessions').value = model.plannedSessions || 10;
+
+  document.getElementById('save-sheet').addEventListener('click', () => {
+    const payload = {};
+    fields.forEach(([key]) => {
+      payload[key] = document.getElementById(key).value.trim();
+    });
+    payload.developmentLevel = document.getElementById('developmentLevel').value.trim();
+    payload.workPlan = document.getElementById('workPlan').value.trim();
+    payload.plannedSessions = parseInt(document.getElementById('plannedSessions').value || '10', 10);
+
+    window.DmedStorage.savePsychologistSheet(patient.id, payload);
+    window.DmedSpecialist.saveProcedureExecution({
+      patientId: patient.id,
+      specialistId: specialist.id,
+      code: 'A02.070.000',
+      dayIdx: window.DmedSpecialist.getTodayDayIndex(patient),
+      note: 'Лист психолога заполнен и сохранён.',
+      procedureName: 'Консультация: Психолог',
+      statusText: 'Психологическое обследование выполнено'
+    });
+    alert('Лист психолога сохранён');
+  });
+</script>
+</body>
+</html>

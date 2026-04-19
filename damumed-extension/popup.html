@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Damumed Assistant — Настройки</title>
+<style>
+  :root {
+    --pop-primary:      #0f6d7a;
+    --pop-primary-dark: #0a5560;
+    --pop-primary-soft: #dff3f5;
+    --pop-success:      #2f8f63;
+    --pop-danger:       #c4554d;
+    --pop-border:       #d7e1e4;
+    --pop-surface:      #ffffff;
+    --pop-surface-alt:  #edf4f5;
+    --pop-text:         #25363a;
+    --pop-muted:        #6b7f84;
+  }
+  body {
+    width: 320px;
+    margin: 0;
+    padding: 16px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: var(--pop-text);
+    background: #f4f8f8;
+  }
+  h1 {
+    font-size: 15px;
+    margin: 0 0 14px 0;
+    color: var(--pop-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    margin-top: 14px;
+  }
+  .key-status {
+    display: inline-block;
+    font-size: 11px;
+    margin-left: 6px;
+    font-weight: normal;
+    color: var(--pop-muted);
+  }
+  .key-status.ok   { color: var(--pop-success); }
+  .key-status.miss { color: var(--pop-danger); }
+  input, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--pop-border);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    background: var(--pop-surface);
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--pop-primary);
+    box-shadow: 0 0 0 3px rgba(15,109,122,0.15);
+  }
+  .hint {
+    font-size: 11px;
+    color: var(--pop-muted);
+    margin-top: 4px;
+  }
+  .hint a { color: var(--pop-primary); text-decoration: none; }
+  .hint a:hover { text-decoration: underline; }
+  button {
+    width: 100%;
+    padding: 9px;
+    margin-top: 12px;
+    background: var(--pop-primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  button:hover { background: var(--pop-primary-dark); }
+  button.secondary {
+    background: var(--pop-surface);
+    color: var(--pop-primary);
+    border: 1px solid var(--pop-primary);
+    margin-top: 6px;
+  }
+  button.secondary:hover { background: var(--pop-primary-soft); }
+  .status {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    display: none;
+  }
+  .status.success { background: #dff2e8; color: #1f5f43; display: block; }
+  .status.error   { background: #f6e2e0; color: #7f2c28; display: block; }
+  .footer {
+    border-top: 1px solid var(--pop-border);
+    padding-top: 10px;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--pop-muted);
+    text-align: center;
+  }
+  .provider-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f0ff;
+    border: 1px solid #c8c8f0;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4a4aaa;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>✨ Damumed Assistant</h1>
+
+<div class="provider-badge">🤖 Claude API (Anthropic)</div>
+
+<label for="claude-key">
+  API-ключ
+  <span class="key-status" id="key-status"></span>
+</label>
+<input type="password" id="claude-key" placeholder="sk-ant-api03-...">
+<div class="hint">
+  Получить: <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
+</div>
+
+<label for="claude-model">Модель</label>
+<select id="claude-model">
+  <option value="claude-haiku-4-5-20251001">claude-haiku-4-5 — быстрая, дешёвая (рекомендуется)</option>
+  <option value="claude-sonnet-4-6">claude-sonnet-4-6 — умнее, дороже</option>
+  <option value="claude-opus-4-7">claude-opus-4-7 — самая мощная</option>
+</select>
+
+<button id="save-btn">Сохранить</button>
+<button id="test-btn" class="secondary">🔌 Проверить связь</button>
+
+<div id="status" class="status"></div>
+
+<div class="footer">
+  v0.3 · AIS Hack 3.0 · Ctrl+Space — голос
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

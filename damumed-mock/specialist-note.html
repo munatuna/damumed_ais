@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Карточка процедуры - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<div class="dmed-container">
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a id="back-assignments" href="#">Мои назначения</a>
+    <span class="separator">›</span>
+    <span>Запись о выполнении</span>
+  </div>
+
+  <div class="patient-header">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>Возраст: <span id="patient-age"></span></span>
+        <span>Палата: <span id="patient-ward"></span></span>
+      </div>
+      <div class="patient-meta mt-2" id="procedure-meta"></div>
+    </div>
+    <div>
+      <span class="badge badge-warning" id="status-badge">Ожидает</span>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="note-box">
+      <div class="dmed-panel-heading" style="margin:-18px -18px 16px -18px;">
+        <h3>Краткая запись специалиста</h3>
+      </div>
+
+      <div class="chip-row mb-3" id="snippet-row"></div>
+
+      <div class="form-group">
+        <label for="note-text">Итог процедуры</label>
+        <textarea id="note-text" class="form-control" placeholder="Например: массаж выполнен, ребёнок перенёс процедуру удовлетворительно, жалоб нет."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="status-text">Краткий статус</label>
+        <input id="status-text" class="form-control" placeholder="без жалоб / перенёс хорошо / контакт продуктивный">
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-success" id="btn-complete">Отметить выполнено и сохранить</button>
+        <a class="btn" id="btn-back" href="#">Назад к назначениям</a>
+      </div>
+    </div>
+
+    <div class="dmed-panel">
+      <div class="dmed-panel-heading">
+        <h3>История заметок</h3>
+      </div>
+      <div class="dmed-panel-body" id="history-root"></div>
+    </div>
+  </div>
+
+  <!-- ── Полная карта пациента для специалиста ── -->
+  <div style="margin-top:18px;">
+    <div class="dmed-panel-heading" style="border-radius:8px 8px 0 0;cursor:pointer;user-select:none;" id="fullcard-toggle">
+      <h3 style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📋 Полная карта пациента</span>
+        <span id="fullcard-arrow" style="font-size:13px;opacity:.6;">▼ развернуть</span>
+      </h3>
+    </div>
+    <div id="fullcard-body" style="display:none;">
+
+      <!-- Диагнозы -->
+      <div class="dmed-panel" style="border-radius:0;border-top:none;margin-bottom:0;">
+        <div class="dmed-panel-heading" style="background:#f0f6f7;">
+          <h3 style="font-size:13px;color:#1a6b7c;">Диагнозы</h3>
+        </div>
+        <div class="dmed-panel-body" id="fc-diagnoses" style="font-size:13px;"></div>
+      </div>
+
+      <!-- Назначения (расписание) -->
+      <div class="dmed-panel" style="border-radius:0;border-top:none;margin-bottom:0;">
+        <div class="dmed-panel-heading" style="background:#f0f6f7;">
+          <h3 style="font-size:13px;color:#1a6b7c;">Назначения и расписание</h3>
+        </div>
+        <div class="dmed-panel-body" id="fc-schedule" style="font-size:13px;"></div>
+      </div>
+
+      <!-- Медицинские записи -->
+      <div class="dmed-panel" style="border-radius:0;border-top:none;margin-bottom:0;">
+        <div class="dmed-panel-heading" style="background:#f0f6f7;">
+          <h3 style="font-size:13px;color:#1a6b7c;">Медицинские записи</h3>
+        </div>
+        <div class="dmed-panel-body" id="fc-records" style="font-size:13px;"></div>
+      </div>
+
+      <!-- Последние дневники -->
+      <div class="dmed-panel" style="border-radius:0 0 8px 8px;border-top:none;">
+        <div class="dmed-panel-heading" style="background:#f0f6f7;">
+          <h3 style="font-size:13px;color:#1a6b7c;">Последние дневниковые записи</h3>
+        </div>
+        <div class="dmed-panel-body" id="fc-diaries" style="font-size:13px;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script src="specialist-common.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const specialist = window.DmedSpecialist.getSpecialistFromUrl();
+  const patient = window.DmedSpecialist.getPatientById(params.get('id'));
+  const code = params.get('code') || specialist.procedureCodes[0];
+  const dayIdx = parseInt(params.get('day') || window.DmedSpecialist.getTodayDayIndex(patient), 10);
+  const proc = window.PROCEDURES[code];
+
+  document.getElementById('nav-root').innerHTML = window.DmedSpecialist.buildSpecialistNav('assignments', specialist.id);
+  document.getElementById('back-assignments').href = `specialist-assignments.html?specialist=${specialist.id}`;
+  document.getElementById('btn-back').href = `specialist-assignments.html?specialist=${specialist.id}`;
+  document.title = `${proc.name} - ${patient.fullName}`;
+
+  document.getElementById('patient-name').textContent = patient.fullName;
+  document.getElementById('patient-id').textContent = patient.id;
+  document.getElementById('patient-age').textContent = `${patient.age} лет`;
+  document.getElementById('patient-ward').textContent = patient.ward;
+  document.getElementById('procedure-meta').innerHTML = `
+    <span>Процедура: <strong>${proc.name}</strong></span>
+    <span>Время: <strong>${proc.slot}</strong></span>
+    <span>Кабинет: <strong>${proc.room}</strong></span>
+    <span>${window.DmedSpecialist.formatDayLabel(patient, dayIdx)}</span>
+  `;
+
+  const schedule = window.DmedSpecialist.getPatientSchedule(patient);
+  const row = schedule.find(r => r.code === code);
+  const currentStatus = row?.days?.[dayIdx] || 'scheduled';
+  const badge = document.getElementById('status-badge');
+  if (currentStatus === 'done') {
+    badge.className = 'badge badge-success';
+    badge.textContent = 'Выполнено';
+  }
+
+  const snippetRow = document.getElementById('snippet-row');
+  (window.SPECIALIST_NOTE_SNIPPETS[specialist.id] || []).forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.textContent = text;
+    btn.addEventListener('click', () => {
+      const area = document.getElementById('note-text');
+      area.value = area.value ? `${area.value.trim()} ${text}` : text;
+    });
+    snippetRow.appendChild(btn);
+  });
+
+  const historyRoot = document.getElementById('history-root');
+  const notes = window.DmedStorage.getSpecialistNotesByCode(patient.id, specialist.id, code);
+  if (!notes.length) {
+    historyRoot.innerHTML = '<div class="text-muted">Заметок пока нет.</div>';
+  } else {
+    historyRoot.innerHTML = notes.map(note => `
+      <div style="padding:0 0 12px 0; margin-bottom:12px; border-bottom:1px solid var(--dmed-border);">
+        <div style="font-size:12px; color:var(--dmed-muted); margin-bottom:6px;">${new Date(note.savedAt).toLocaleString('ru')}</div>
+        <div style="font-weight:600; margin-bottom:4px;">${note.statusText || 'Запись специалиста'}</div>
+        <div>${note.note || '—'}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── Полная карта: toggle ───────────────────────────────────────────────────
+  document.getElementById('fullcard-toggle').addEventListener('click', () => {
+    const body  = document.getElementById('fullcard-body');
+    const arrow = document.getElementById('fullcard-arrow');
+    const open  = body.style.display !== 'none';
+    body.style.display  = open ? 'none' : 'block';
+    arrow.textContent   = open ? '▼ развернуть' : '▲ свернуть';
+    if (!open) renderFullCard();
+  });
+
+  function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function renderFullCard() {
+    const pid = patient.id;
+
+    // ── Диагнозы ──
+    const diagEl = document.getElementById('fc-diagnoses');
+    const diagRaw = localStorage.getItem('dmed_diagnoses_' + pid);
+    const diags = diagRaw ? JSON.parse(diagRaw) : buildDefaultDiagnoses();
+    if (!diags.length) {
+      diagEl.innerHTML = '<div class="text-muted">Диагнозы не найдены</div>';
+    } else {
+      diagEl.innerHTML = diags.map(d => `
+        <div style="padding:6px 0;border-bottom:1px solid var(--dmed-border);display:flex;gap:12px;align-items:flex-start;">
+          <span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#dff3f5;color:#1a6b7c;white-space:nowrap;flex-shrink:0;">${esc(d.type)}</span>
+          <div>
+            <strong>${esc(d.icd)}</strong>${d.name ? ' — ' + esc(d.name) : ''}
+            ${d.note ? `<div style="font-size:11px;color:var(--dmed-muted);margin-top:2px;">${esc(d.note)}</div>` : ''}
+          </div>
+          <span style="margin-left:auto;font-size:11px;color:var(--dmed-muted);white-space:nowrap;">${esc(d.date)}</span>
+        </div>`).join('');
+    }
+
+    // ── Расписание / назначения ──
+    const schedEl = document.getElementById('fc-schedule');
+    const sched = window.DmedStorage.getSchedule(pid) || [];
+    if (!sched.length) {
+      schedEl.innerHTML = '<div class="text-muted">Расписание не найдено</div>';
+    } else {
+      const rows = sched.map(row => {
+        const proc = window.PROCEDURES[row.code];
+        const done      = row.days.filter(d => d && (d.status||d) === 'done').length;
+        const prescribed = proc?.sessions || row.days.filter(d => d && (d.status||d) !== 'empty').length;
+        const pct       = prescribed ? Math.round(done / prescribed * 100) : 0;
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--dmed-border);">
+            <div style="flex:1;font-size:12px;"><strong>${esc(proc?.name||row.code)}</strong>
+              <span style="color:var(--dmed-muted);margin-left:6px;">${esc(proc?.specialist||'')}</span>
+            </div>
+            <div style="font-size:11px;color:var(--dmed-muted);">${done}/${prescribed} сеансов</div>
+            <div style="width:80px;height:6px;background:#e5e5e5;border-radius:4px;overflow:hidden;">
+              <div style="width:${pct}%;height:100%;background:${pct===100?'#2f8f63':'#1a6b7c'};"></div>
+            </div>
+          </div>`;
+      }).join('');
+      schedEl.innerHTML = rows;
+    }
+
+    // ── Медицинские записи ──
+    const recEl = document.getElementById('fc-records');
+    const recIdx = window.DmedStorage.getRecordsIndex(pid);
+    if (!recIdx.length) {
+      recEl.innerHTML = '<div class="text-muted">Медицинских записей нет</div>';
+    } else {
+      recEl.innerHTML = recIdx.map(r => {
+        const dt = r.savedAt
+          ? new Date(r.savedAt).toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',','')
+          : (r.dateStr || '—');
+        const badge = r.signed
+          ? '<span class="badge badge-success" style="font-size:10px;">Подписан</span>'
+          : '<span class="badge badge-warning" style="font-size:10px;">Черновик</span>';
+        const fullRec = window.DmedStorage.getRecord(pid, r.rtype);
+        const preview = fullRec?.fields?.complaints || fullRec?.fields?.objective || '';
+        return `
+          <div style="padding:6px 0;border-bottom:1px solid var(--dmed-border);">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <span style="font-size:11px;color:var(--dmed-muted);white-space:nowrap;">${dt}</span>
+              <strong style="font-size:13px;">${esc(r.typeLabel)}</strong>
+              ${badge}
+            </div>
+            ${preview ? `<div style="font-size:11px;color:var(--dmed-muted);margin-top:3px;">${esc(preview.slice(0,120))}${preview.length>120?'…':''}</div>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    // ── Дневники ──
+    const diarEl = document.getElementById('fc-diaries');
+    const diaries = window.DmedStorage.getDiaries(pid).slice(0, 5);
+    if (!diaries.length) {
+      diarEl.innerHTML = '<div class="text-muted">Дневниковых записей нет</div>';
+    } else {
+      diarEl.innerHTML = diaries.map(d => {
+        const dt = d.savedAt
+          ? new Date(d.savedAt).toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',','')
+          : '—';
+        const vitals = [
+          d.temperature && `T° ${d.temperature}`,
+          d.pulse       && `П ${d.pulse}`,
+          d.pressureTop && `АД ${d.pressureTop}/${d.pressureBottom}`,
+        ].filter(Boolean).join(' | ');
+        return `
+          <div style="padding:6px 0;border-bottom:1px solid var(--dmed-border);">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:2px;">
+              <span style="font-size:11px;color:var(--dmed-muted);">${dt}</span>
+              ${vitals ? `<span style="font-size:11px;font-weight:600;">${esc(vitals)}</span>` : ''}
+              ${d.status ? `<span style="font-size:11px;color:var(--dmed-muted);">${esc(d.status)}</span>` : ''}
+            </div>
+            ${d.note ? `<div style="font-size:12px;">${esc(d.note.slice(0,100))}${d.note.length>100?'…':''}</div>` : ''}
+          </div>`;
+      }).join('');
+    }
+  }
+
+  function buildDefaultDiagnoses() {
+    const list = [];
+    function parse(str, type) {
+      if (!str) return null;
+      const m = str.match(/^\(([^)]+)\)\s*(.+)$/);
+      return m ? { icd: m[1], name: m[2].trim(), type, date: patient.admissionDate } : { icd: '—', name: str, type, date: patient.admissionDate };
+    }
+    const main = parse(patient.admissionDiagnosisMain, 'Основной');
+    const clarify = parse(patient.admissionDiagnosisClarify, 'Уточнение');
+    if (main) list.push(main);
+    if (clarify) list.push(clarify);
+    return list;
+  }
+
+  document.getElementById('btn-complete').addEventListener('click', () => {
+    const note = document.getElementById('note-text').value.trim();
+    const statusText = document.getElementById('status-text').value.trim() || 'Процедура выполнена';
+
+    window.DmedSpecialist.saveProcedureExecution({
+      patientId: patient.id,
+      specialistId: specialist.id,
+      code,
+      dayIdx,
+      note,
+      procedureName: proc.name,
+      statusText
+    });
+
+    window.location.reload();
+  });
+</script>
+</body>
+</html>

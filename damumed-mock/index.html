@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <title>Мои пациенты - Dmed.Стационар</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+  .del-patient-btn {
+    background: transparent; border: none; color: #c4544d;
+    font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1;
+    opacity: 0.5; vertical-align: middle;
+  }
+  .del-patient-btn:hover { opacity: 1; }
+</style>
 </head>
 <body>
 
@@ -12,9 +20,9 @@
   <div class="logo">Dmed.Стационар</div>
   <ul class="nav-menu">
     <li><a href="index.html" class="active">Мои пациенты</a></li>
-    <li><a href="#" onclick="alert('Демо: не реализовано'); return false;">Поступления</a></li>
-    <li><a href="#" onclick="alert('Демо: не реализовано'); return false;">Отчёты</a></li>
-    <li><a href="#" onclick="alert('Демо: не реализовано'); return false;">Справочники</a></li>
+    <li><a href="#" onclick="alert('Демо: поступления'); return false;">Поступления</a></li>
+    <li><a href="reports.html">Отчёты</a></li>
+    <li><a href="directories.html">Справочники</a></li>
   </ul>
   <div class="user-info">
     <div class="name">МАХМУТХАН А.М.</div>
@@ -72,7 +80,17 @@
   // Рендер списка пациентов
   const tbody = document.getElementById('patients-tbody');
 
+  const STATIC_IDS = new Set(['352','467','484','398','193']);
+
+  function deleteDynamicPatient(pid) {
+    const list = JSON.parse(localStorage.getItem('dmed_dynamic_patients') || '[]');
+    const updated = list.filter(p => p.id !== pid);
+    localStorage.setItem('dmed_dynamic_patients', JSON.stringify(updated));
+    location.reload();
+  }
+
   window.PATIENTS.forEach(p => {
+    const isDynamic = !STATIC_IDS.has(p.id);
     const tr = document.createElement('tr');
     tr.style.cursor = 'pointer';
     tr.setAttribute('data-patient-id', p.id);
@@ -84,16 +102,20 @@
       discharged: '<span class="badge badge-default">Выписан</span>'
     }[p.status] || '';
 
+    const deleteBtnHtml = isDynamic
+      ? `<button class="del-patient-btn" title="Удалить пациента" onclick="event.stopPropagation();if(confirm('Удалить ${p.fullName}?'))deleteDynamicPatient('${p.id}')">×</button>`
+      : '';
+
     tr.innerHTML = `
       <td>${p.id}</td>
       <td>${p.iin}</td>
-      <td><strong>${p.fullName}</strong></td>
+      <td><strong>${p.fullName}</strong>${isDynamic ? ' <span style="font-size:10px;color:#aaa;font-weight:normal;">(PDF)</span>' : ''}</td>
       <td>${p.birthDate}</td>
       <td>${p.age}</td>
       <td><small>${p.admissionDiagnosisMain}</small></td>
       <td>${p.admissionDate}</td>
       <td class="text-center">${p.currentDay}/14</td>
-      <td>${statusBadge}</td>
+      <td>${statusBadge} ${deleteBtnHtml}</td>
     `;
     tr.addEventListener('click', () => {
       window.location.href = `patient.html?id=${p.id}`;

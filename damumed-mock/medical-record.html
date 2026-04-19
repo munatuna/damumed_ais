@@ -4,252 +4,640 @@
 <meta charset="UTF-8">
 <title>Медицинская запись - Dmed.Стационар</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+
+  /* === Главный контейнер на всю высоту === */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* === Строка под навбаром === */
+  #top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 7px 15px;
+    font-size: 12px;
+    color: #777;
+    flex-shrink: 0;
+  }
+  #top-bar .tb-info { display: flex; align-items: center; gap: 8px; }
+  #top-bar .tb-actions { display: flex; gap: 8px; }
+
+  /* === Рабочая область (flex row) === */
+  #workspace {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* === Левая панель === */
+  #sidebar {
+    width: 300px;
+    min-width: 240px;
+    flex-shrink: 0;
+    background: var(--dmed-surface-alt);
+    border-right: 1px solid var(--dmed-border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sb-patient {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--dmed-border);
+    background: #fff;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+  }
+  .sb-avatar {
+    width: 46px; height: 46px;
+    background: #ddd; border: 1px solid #bbb; border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #999; flex-shrink: 0;
+  }
+  .sb-patient-info strong { display: block; font-size: 12px; color: #333; line-height: 1.4; }
+  .sb-patient-info small  { display: block; font-size: 11px; color: var(--dmed-muted); line-height: 1.5; }
+  .sb-patient-info a      { font-size: 11px; color: var(--dmed-primary); }
+
+  .sb-block-header {
+    background: var(--dmed-primary);
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .sb-block-body {
+    padding: 10px 12px;
+    background: #fff;
+    border-bottom: 1px solid var(--dmed-border);
+  }
+  .sb-block-body .form-group { margin-bottom: 8px; }
+  .sb-block-body label {
+    display: block;
+    font-size: 11px; color: var(--dmed-muted);
+    font-weight: 400; margin-bottom: 3px;
+  }
+  .sb-block-body .form-control { font-size: 12px; padding: 4px 7px; }
+  .sb-dt-row { display: flex; gap: 5px; align-items: center; }
+  .sb-dt-row input { flex: 1; font-size: 12px; }
+
+  /* === Навигация по разделам === */
+  #section-nav { list-style: none; margin: 0; padding: 0; background: #fff; }
+  #section-nav li { border-bottom: 1px solid #f0f0f0; }
+  #section-nav li a {
+    display: block;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: #444;
+    text-decoration: none;
+    transition: background 0.1s;
+  }
+  #section-nav li a:hover { background: #edf7f8; }
+  #section-nav li.active a {
+    background: var(--dmed-primary-soft);
+    color: var(--dmed-primary);
+    font-weight: 600;
+    border-left: 3px solid var(--dmed-primary);
+    padding-left: 13px;
+  }
+
+  /* === Правая часть — документ === */
+  #canvas-area {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--dmed-canvas);
+    overflow: hidden;
+  }
+
+  /* Панель инструментов над листом */
+  #doc-toolbar {
+    background: var(--dmed-toolbar);
+    border-bottom: 1px solid #bccdcf;
+    padding: 5px 12px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .tb-btn {
+    background: transparent; border: 1px solid transparent;
+    border-radius: 2px; padding: 3px 7px;
+    font-size: 12px; cursor: pointer; color: #333;
+    min-width: 26px; text-align: center; line-height: 1.3;
+  }
+  .tb-btn:hover { background: #d3e1e4; border-color: #a9bec2; }
+  .tb-sep { width: 1px; height: 18px; background: #bccdcf; margin: 0 3px; }
+  .tb-sel {
+    font-size: 12px; padding: 2px 5px;
+    border: 1px solid #ccc; border-radius: 2px;
+    background: #fff; height: 24px;
+  }
+
+  /* Прокручиваемая область с бумагой */
+  #doc-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 20px;
+  }
+
+  /* Белый лист */
+  #doc-paper {
+    background: #fff;
+    max-width: 860px;
+    min-height: calc(100vh - 180px);
+    margin: 0 auto;
+    padding: 48px 58px 60px;
+    box-shadow: 0 3px 16px rgba(0,0,0,0.4);
+    position: relative;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* Водяной знак */
+  #watermark {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  #watermark span {
+    position: absolute;
+    font-size: 52px; font-weight: bold;
+    color: rgba(0,0,0,0.055);
+    transform: rotate(-28deg);
+    white-space: nowrap; user-select: none;
+  }
+  #watermark span:nth-child(1) { top: 12%; left: -3%; }
+  #watermark span:nth-child(2) { top: 42%; left: 28%; }
+  #watermark span:nth-child(3) { top: 68%; left: -3%; }
+  #watermark span:nth-child(4) { top: 8%;  left: 52%; }
+
+  /* Разделы документа */
+  .doc-section { display: none; position: relative; z-index: 1; }
+  .doc-section.active { display: block; }
+
+  .doc-section-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10px; font-weight: 600;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .doc-section textarea {
+    width: 100%; min-height: 480px;
+    border: none; outline: none; resize: vertical;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px; line-height: 1.9;
+    color: #1a1a1a; background: transparent; padding: 0;
+    display: block;
+  }
+  .doc-section textarea::placeholder { color: #ccc; font-style: italic; }
+
+  /* Vitals inline form inside paper */
+  .vitals-grid {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+  }
+  .vitals-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+  .vitals-field label {
+    display: block; font-size: 11px; color: var(--dmed-muted);
+    font-weight: 400; margin-bottom: 3px;
+  }
+  .vitals-field input,
+  .vitals-field select {
+    padding: 5px 8px; font-size: 13px;
+    border: 1px solid #ccc; border-radius: 3px;
+    background: #fff; font-family: inherit;
+    width: 100%;
+  }
+  .vitals-field { min-width: 80px; }
+  .vitals-field.w-sm { width: 80px; }
+  .vitals-field.w-md { width: 120px; }
+  .vitals-field.w-lg { width: 180px; }
+  .vitals-bp { display: flex; align-items: flex-end; gap: 4px; }
+  .vitals-bp input { width: 60px; }
+  .vitals-bp span { padding-bottom: 6px; color: #555; }
+</style>
 </head>
 <body>
 
-<nav class="dmed-navbar">
-  <div class="logo">Dmed.Стационар</div>
-  <ul class="nav-menu">
-    <li><a href="index.html">Мои пациенты</a></li>
-    <li><a href="#" class="active">Медицинская запись</a></li>
-  </ul>
-  <div class="user-info">
-    <div class="name">МАХМУТХАН А.М.</div>
-    <div>Реабилитолог | РЦ «Акбобек»</div>
-  </div>
-</nav>
+<div id="app">
 
-<div class="dmed-container">
-
-  <div class="dmed-breadcrumb">
-    <a href="index.html">Главная</a>
-    <span class="separator">›</span>
-    <a href="index.html">Мои пациенты</a>
-    <span class="separator">›</span>
-    <a id="back-to-patient" href="#">Карта пациента</a>
-    <span class="separator">›</span>
-    <span id="record-type-label">Первичный осмотр</span>
-  </div>
-
-  <div class="patient-header">
-    <div>
-      <h3 class="patient-name" id="patient-name"></h3>
-      <div class="patient-meta">
-        <span>Карта № <strong id="patient-id"></strong></span>
-        <span>ИИН: <span id="patient-iin"></span></span>
-        <span>Д.р.: <span id="patient-bd"></span></span>
-      </div>
+  <!-- Навбар -->
+  <nav class="dmed-navbar" style="flex-shrink:0;">
+    <div class="logo">Dmed.Стационар</div>
+    <ul class="nav-menu">
+      <li><a href="index.html">Мои пациенты</a></li>
+      <li><a href="#" class="active">Медицинская запись</a></li>
+    </ul>
+    <div class="user-info">
+      <div class="name">МАХМУТХАН А.М.</div>
+      <div>Реабилитолог | РЦ «Акбобек»</div>
     </div>
-    <div>
-      <span class="badge badge-info" id="record-type-badge">Первичный осмотр</span>
+  </nav>
+
+  <!-- Верхняя строка -->
+  <div id="top-bar">
+    <div class="tb-info">
+      <span style="color:var(--dmed-info);">ℹ</span>
+      <span>Системная дата на момент открытия: <strong id="sys-date-open"></strong></span>
+      <span style="color:#ccc;">|</span>
+      <span>В системе будут зафиксированы дата и время сохранения формы</span>
+    </div>
+    <div class="tb-actions">
+      <button class="btn btn-sm" id="btn-save-file">⬇ Скачать</button>
+      <button class="btn btn-sm btn-primary" id="btn-agree">Согласия</button>
+      <button class="btn btn-sm btn-success" id="btn-save">Сохранить</button>
+      <button class="btn btn-sm" id="btn-sign" style="background:#1a6b7c;color:#fff;border:none;border-radius:4px;padding:5px 12px;cursor:pointer;font-weight:600;">✍ Подписать</button>
     </div>
   </div>
 
-  <div class="dmed-panel">
-    <div class="dmed-panel-heading">
-      <h3 id="record-title">Первичный осмотр</h3>
-      <div>
-        <span class="text-muted" style="font-size: 12px;">
-          Дата:
-          <input type="text" id="dtRegDateTime" name="dtRegDateTime"
-                 style="width: 130px; padding: 2px 6px; font-size: 12px;" readonly>
-        </span>
-      </div>
-    </div>
+  <!-- Рабочая область -->
+  <div id="workspace">
 
-    <div class="dmed-panel-body">
+    <!-- ===== ЛЕВАЯ ПАНЕЛЬ ===== -->
+    <div id="sidebar">
 
-      <!-- ВНИМАНИЕ: каждая подкатегория - отдельная textarea с id="section-<code>".
-           Агент будет находить их по этим ID и заполнять гранулярно.
-           Коды взяты из реальной схемы Дамумеда (PatientMedicalRecordField, FieldTypeID=7). -->
-
-      <div class="form-group" data-section-code="100">
-        <label for="section-100">
-          <span class="text-muted">(100)</span> Жалобы при поступлении
-          <span class="text-muted" style="font-weight: normal;">— что беспокоит пациента</span>
-        </label>
-        <textarea id="section-100" name="section-100" class="form-control"
-                  data-section-key="complaints"
-                  placeholder="Например: жалобы на частые простудные заболевания..."></textarea>
-      </div>
-
-      <div class="form-group" data-section-code="200">
-        <label for="section-200">
-          <span class="text-muted">(200)</span> Анамнез заболевания
-          <span class="text-muted" style="font-weight: normal;">— когда началось, динамика, предыдущее лечение</span>
-        </label>
-        <textarea id="section-200" name="section-200" class="form-control"
-                  data-section-key="anamnesis_disease"
-                  placeholder="Например: состоит на диспансерном учёте с..."></textarea>
+      <!-- Пациент -->
+      <div class="sb-patient">
+        <div class="sb-avatar">👤</div>
+        <div class="sb-patient-info">
+          <strong id="sb-name">—</strong>
+          <small id="sb-iin">ИИН: —</small>
+          <small id="sb-blood">Группа крови: —</small>
+          <small id="sb-dates">—</small>
+          <a href="#" id="btn-edit-patient" onclick="toggleEditPatient(event)">Изменить ▾</a>
+        <div id="edit-patient-form" style="display:none; padding:6px 0; font-size:12px;">
+          <div class="form-group">
+            <label>Группа крови</label>
+            <select class="form-control" id="inp-blood" style="font-size:11px; padding:3px 5px;">
+              <option value="">Не указана</option>
+              <option value="O(I) Rh+">O(I) Rh+</option><option value="O(I) Rh-">O(I) Rh-</option>
+              <option value="A(II) Rh+">A(II) Rh+</option><option value="A(II) Rh-">A(II) Rh-</option>
+              <option value="B(III) Rh+">B(III) Rh+</option><option value="B(III) Rh-">B(III) Rh-</option>
+              <option value="AB(IV) Rh+">AB(IV) Rh+</option><option value="AB(IV) Rh-">AB(IV) Rh-</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>День курса</label>
+            <input type="number" class="form-control" id="inp-day" min="1" max="14" style="font-size:11px; padding:3px 5px; width:60px;">
+          </div>
+          <button class="btn btn-xs btn-primary" onclick="savePatientEdit()">Сохранить</button>
+          <button class="btn btn-xs" onclick="toggleEditPatient(event)">Отмена</button>
+        </div>
+        </div>
       </div>
 
-      <div class="form-group" data-section-code="300">
-        <label for="section-300">
-          <span class="text-muted">(300)</span> Анамнез жизни
-          <span class="text-muted" style="font-weight: normal;">— роды, развитие, перенесённые заболевания, наследственность</span>
-        </label>
-        <textarea id="section-300" name="section-300" class="form-control"
-                  data-section-key="anamnesis_life"
-                  placeholder="Например: ребёнок от N-й беременности, роды срочные..."></textarea>
+      <!-- Метаданные записи -->
+      <div class="sb-block-header">Медицинская запись</div>
+      <div class="sb-block-body">
+        <div class="form-group">
+          <label>Тип записи</label>
+          <select class="form-control" id="sb-type">
+            <option value="primary">Первичный осмотр</option>
+            <option value="er">Осмотр врача приёмного покоя</option>
+            <option value="stage">Этапный эпикриз</option>
+            <option value="discharge">Выписной эпикриз</option>
+            <option value="consult">Консультация специалиста</option>
+            <option value="new">Новая запись</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Дата регистрации</label>
+          <div class="sb-dt-row">
+            <input type="datetime-local" class="form-control" id="dtRegDateTime">
+            <button class="btn btn-xs" id="btn-now">Сейчас</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Форма</label>
+          <select class="form-control" id="sb-form">
+            <option value="">Пустой</option>
+            <option value="tpl1">Шаблон 1</option>
+            <option value="tpl2">Шаблон 2</option>
+          </select>
+        </div>
       </div>
 
-      <div class="form-group" data-section-code="400">
-        <label for="section-400">
-          <span class="text-muted">(400)</span> Аллергологический анамнез
-        </label>
-        <textarea id="section-400" name="section-400" class="form-control"
-                  data-section-key="allergy_anamnesis"
-                  rows="2"
-                  placeholder="Например: аллергоанамнез спокоен"></textarea>
-      </div>
-
-      <div class="form-group" data-section-code="500">
-        <label for="section-500">
-          <span class="text-muted">(500)</span> Объективные данные
-          <span class="text-muted" style="font-weight: normal;">— осмотр, вес, рост, витальные показатели, системы органов</span>
-        </label>
-        <textarea id="section-500" name="section-500" class="form-control"
-                  data-section-key="objective"
-                  rows="6"
-                  placeholder="Например: вес..., рост..., ИМТ..., общее состояние..."></textarea>
-      </div>
-
-      <div class="form-group" data-section-code="700">
-        <label for="section-700">
-          <span class="text-muted">(700)</span> Обоснование диагноза
-        </label>
-        <textarea id="section-700" name="section-700" class="form-control"
-                  data-section-key="diagnosis_rationale"
-                  rows="3"
-                  placeholder="На основании клинических и параклинических данных..."></textarea>
-      </div>
-
-      <div class="form-group" data-section-code="800">
-        <label for="section-800">
-          <span class="text-muted">(800)</span> Инструментальные исследования
-          <span class="text-muted" style="font-weight: normal;">— ЭКГ, УЗИ, МРТ, ОАК, ОАМ и т.д.</span>
-        </label>
-        <textarea id="section-800" name="section-800" class="form-control"
-                  data-section-key="instrumental"
-                  rows="4"
-                  placeholder="ЭКГ от ... Заключение..."></textarea>
-      </div>
-
-      <div class="form-group" data-section-code="900">
-        <label for="section-900">
-          <span class="text-muted">(900)</span> Проведенное лечение / План лечения
-        </label>
-        <textarea id="section-900" name="section-900" class="form-control"
-                  data-section-key="treatment"
-                  rows="4"
-                  placeholder="Режим..., стол №..., физиолечение..."></textarea>
-      </div>
-
-      <div class="form-group" data-section-code="1200">
-        <label for="section-1200">
-          <span class="text-muted">(1200)</span> Исход лечения
-        </label>
-        <textarea id="section-1200" name="section-1200" class="form-control"
-                  data-section-key="outcome"
-                  rows="2"
-                  placeholder="Заполняется при выписке"></textarea>
-      </div>
-
-      <div class="form-group" data-section-code="600" id="section-600-wrapper" style="display: none;">
-        <label for="section-600">
-          <span class="text-muted">(600)</span> Выписной эпикриз
-        </label>
-        <textarea id="section-600" name="section-600" class="form-control"
-                  data-section-key="discharge_summary"
-                  rows="4"></textarea>
-      </div>
-
-      <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
-        <button class="btn" onclick="history.back();">Отмена</button>
-        <button class="btn btn-primary" id="save-record">Сохранить</button>
-        <button class="btn btn-success" id="sign-record">Сохранить и подписать</button>
-      </div>
+      <!-- Навигация по разделам -->
+      <ul id="section-nav">
+        <li class="active" data-sec="complaints"><a href="#">Жалобы при поступлении</a></li>
+        <li data-sec="anamnesis_disease"><a href="#">Анамнез заболевания</a></li>
+        <li data-sec="anamnesis_life"><a href="#">Анамнез жизни</a></li>
+        <li data-sec="allergy"><a href="#">Аллергологический анамнез</a></li>
+        <li data-sec="objective"><a href="#">Объективные данные</a></li>
+        <li data-sec="other"><a href="#">Прочее</a></li>
+        <li data-sec="research"><a href="#">Сведения об обследовании</a></li>
+        <li data-sec="final"><a href="#">Итоговая запись</a></li>
+        <li data-sec="diagnosis"><a href="#">Диагнозы</a></li>
+      </ul>
 
     </div>
-  </div>
+    <!-- /sidebar -->
 
-  <div class="text-muted" style="font-size: 11px; text-align: center; padding: 10px;">
-    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
-  </div>
-</div>
+    <!-- ===== ПРАВАЯ ЧАСТЬ — ДОКУМЕНТ ===== -->
+    <div id="canvas-area">
 
+      <!-- Тулбар -->
+      <div id="doc-toolbar">
+        <button class="tb-btn" onclick="wrapSel('**','**')" title="Жирный"><b>B</b></button>
+        <button class="tb-btn" onclick="wrapSel('_','_')" title="Курсив"><i>I</i></button>
+        <button class="tb-btn" onclick="wrapSel('__','__')" title="Подчёркнутый"><u>U</u></button>
+        <button class="tb-btn" onclick="wrapSel('~~','~~')" title="Зачёркнутый"><s>S</s></button>
+        <span class="tb-sep"></span>
+        <select class="tb-sel" id="tmpl-sel">
+          <option value="">Шаблон ▾</option>
+          <option value="allergy-none">Аллергоанамнез спокоен</option>
+          <option value="cond-sat">Состояние удовлетворительное</option>
+          <option value="no-complaints">Жалоб нет</option>
+        </select>
+        <span class="tb-sep"></span>
+        <button class="tb-btn" onclick="clearSec()" title="Очистить раздел">🗑 Очистить</button>
+      </div>
+
+      <!-- Прокручиваемая область с листом -->
+      <div id="doc-scroll">
+        <div id="doc-paper">
+
+          <!-- Водяной знак -->
+          <div id="watermark">
+            <span id="wm1"></span><span id="wm2"></span>
+            <span id="wm3"></span><span id="wm4"></span>
+          </div>
+
+          <!-- === Разделы === -->
+
+          <div class="doc-section active" id="sec-complaints">
+            <div class="doc-section-label">(100) Жалобы при поступлении — что беспокоит пациента</div>
+            <textarea id="ta-complaints" data-key="complaints"
+              placeholder="Жалобы на частые простудные заболевания...&#10;&#10;Укажите все жалобы пациента при поступлении."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-anamnesis_disease">
+            <div class="doc-section-label">(200) Анамнез заболевания — когда началось, динамика, предыдущее лечение</div>
+            <textarea id="ta-anamnesis_disease" data-key="anamnesis_disease"
+              placeholder="Состоит на диспансерном учёте с...&#10;&#10;Опишите историю заболевания."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-anamnesis_life">
+            <div class="doc-section-label">(300) Анамнез жизни — роды, развитие, перенесённые заболевания, наследственность</div>
+            <textarea id="ta-anamnesis_life" data-key="anamnesis_life"
+              placeholder="Ребёнок от N-й беременности, роды срочные..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-allergy">
+            <div class="doc-section-label">(400) Аллергологический анамнез</div>
+            <textarea id="ta-allergy" data-key="allergy"
+              placeholder="Аллергоанамнез спокоен. Лекарственной непереносимости не выявлено."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-objective">
+            <div class="doc-section-label">(500) Объективные данные — осмотр, вес, рост, витальные показатели, системы органов</div>
+            <textarea id="ta-objective" data-key="objective"
+              placeholder="Вес..., рост..., ИМТ...&#10;Общее состояние...&#10;Кожные покровы...&#10;Дыхательная система...&#10;Сердечно-сосудистая система..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-other">
+            <div class="doc-section-label">Прочее</div>
+            <textarea id="ta-other" data-key="other"
+              placeholder="Дополнительные сведения..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-research">
+            <div class="doc-section-label">(800) Сведения об обследовании — ЭКГ, УЗИ, МРТ, ОАК, ОАМ и т.д.</div>
+            <textarea id="ta-research" data-key="research"
+              placeholder="ЭКГ от ... Заключение: ...&#10;ОАК: ...&#10;ОАМ: ..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-final">
+            <div class="doc-section-label">(900) Итоговая запись — проведённое лечение / план лечения</div>
+            <textarea id="ta-final" data-key="final"
+              placeholder="Режим..., стол №..., физиолечение...&#10;Назначения: ..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-diagnosis">
+            <div class="doc-section-label">(700) Диагнозы — основной, сопутствующий, осложнения</div>
+            <textarea id="ta-diagnosis" data-key="diagnosis"
+              placeholder="Основной диагноз:&#10;МКБ-10: &#10;&#10;Сопутствующий диагноз:&#10;Осложнения:"></textarea>
+          </div>
+
+        </div><!-- /doc-paper -->
+      </div><!-- /doc-scroll -->
+    </div><!-- /canvas-area -->
+
+  </div><!-- /workspace -->
+</div><!-- /app -->
+
+<script src="storage.js"></script>
 <script src="data.js"></script>
 <script>
   const params = new URLSearchParams(window.location.search);
   const patientId = params.get('id') || '352';
-  const recordType = params.get('type') || 'primary'; // primary | stage | discharge | new
+  const recordType = params.get('type') || 'primary';
   const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+  const extra = window.DmedStorage.getPatientExtra(patientId);
 
-  document.getElementById('patient-name').textContent = patient.fullName;
-  document.getElementById('patient-id').textContent = patient.id;
-  document.getElementById('patient-iin').textContent = patient.iin;
-  document.getElementById('patient-bd').textContent = patient.birthDate;
-  document.getElementById('back-to-patient').href = 'patient.html?id=' + patient.id;
+  document.getElementById('sb-name').textContent   = patient.fullName;
+  document.getElementById('sb-iin').textContent    = 'ИИН: ' + patient.iin;
+  document.getElementById('sb-blood').textContent  = 'Группа крови: ' + (extra.bloodGroup || patient.bloodGroup || 'не указана');
+  document.getElementById('sb-dates').textContent  = 'Поступление: ' + (patient.admissionDate || patient.birthDate);
+  document.title = 'Мед.запись – ' + patient.fullName;
 
-  // Подстраиваем тип записи
-  const typeLabels = {
-    primary:   'Первичный осмотр',
-    stage:     'Этапный эпикриз',
-    discharge: 'Выписной эпикриз',
-    new:       'Новая медицинская запись'
-  };
-  const label = typeLabels[recordType] || typeLabels.primary;
-  document.getElementById('record-type-label').textContent = label;
-  document.getElementById('record-type-badge').textContent = label;
-  document.getElementById('record-title').textContent = label;
-  document.title = label + ' - ' + patient.fullName;
+  const wmText = patient.id + ' ' + patient.id;
+  ['wm1','wm2','wm3','wm4'].forEach(id => document.getElementById(id).textContent = wmText);
 
-  // Показываем поле "Выписной эпикриз" только для типа discharge
-  if (recordType === 'discharge') {
-    document.getElementById('section-600-wrapper').style.display = '';
+  // Тип записи из URL
+  const sbType = document.getElementById('sb-type');
+  if (recordType && sbType.querySelector(`option[value="${recordType}"]`)) sbType.value = recordType;
+
+  // Дата / время
+  function toLocalISO(d) {
+    const p = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
   }
+  function fmtDisp(d) {
+    const p = n => String(n).padStart(2,'0');
+    return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  const dtInput = document.getElementById('dtRegDateTime');
+  dtInput.value = toLocalISO(new Date());
+  document.getElementById('sys-date-open').textContent = fmtDisp(new Date());
 
-  // Дата записи
-  const now = new Date();
-  const dateStr = now.toLocaleString('ru', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  }).replace(',', '');
-  document.getElementById('dtRegDateTime').value = dateStr;
-
-  // Кнопки
-  document.getElementById('save-record').addEventListener('click', () => {
-    alert('Черновик сохранён (демо).');
-  });
-  document.getElementById('sign-record').addEventListener('click', () => {
-    alert('Запись подписана (демо). В реальности отправилось бы в КМИС.');
-    window.location.href = 'patient.html?id=' + patient.id;
+  document.getElementById('btn-now').addEventListener('click', () => {
+    dtInput.value = toLocalISO(new Date());
   });
 
-  // API для агента: он кидает сюда событие с объектом {sectionKey: text}
-  // и мы заполняем textarea с подсветкой
-  window.addEventListener('dmed-fill-record', (e) => {
-    const fields = e.detail || {};
-    Object.entries(fields).forEach(([key, value]) => {
-      // Ищем textarea по data-section-key ИЛИ по code
-      let ta = document.querySelector(`textarea[data-section-key="${key}"]`);
-      if (!ta) ta = document.querySelector(`textarea[id="section-${key}"]`);
-      if (ta && value) {
-        ta.value = value;
-        ta.classList.remove('ai-filled-animation');
-        // Перезапуск анимации
-        void ta.offsetWidth;
-        ta.classList.add('ai-filled-animation');
-        // Добавляем бейдж "AI" рядом с label, если ещё нет
-        const label = ta.closest('.form-group')?.querySelector('label');
-        if (label && !label.querySelector('.ai-badge')) {
-          const badge = document.createElement('span');
-          badge.className = 'ai-badge';
-          label.appendChild(badge);
-        }
+  // Навигация по разделам
+  const navItems = document.querySelectorAll('#section-nav li');
+  navItems.forEach(li => {
+    li.querySelector('a').addEventListener('click', e => {
+      e.preventDefault();
+      navItems.forEach(i => i.classList.remove('active'));
+      li.classList.add('active');
+      document.querySelectorAll('.doc-section').forEach(s => s.classList.remove('active'));
+      const sec = document.getElementById('sec-' + li.dataset.sec);
+      if (sec) {
+        sec.classList.add('active');
+        const ta = sec.querySelector('textarea');
+        if (ta) setTimeout(() => ta.focus(), 50);
       }
     });
   });
+
+  // Форматирование (wrap выделения)
+  function wrapSel(open, close) {
+    const ta = document.querySelector('.doc-section.active textarea');
+    if (!ta) return;
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    ta.setRangeText(open + ta.value.substring(s, e) + close, s, e, 'select');
+    ta.focus();
+  }
+
+  function clearSec() {
+    const ta = document.querySelector('.doc-section.active textarea');
+    if (ta && confirm('Очистить этот раздел?')) { ta.value = ''; ta.focus(); }
+  }
+
+  // Шаблоны
+  const TEMPLATES = {
+    'allergy-none':  'Аллергологический анамнез спокоен. Лекарственной непереносимости не выявлено.',
+    'cond-sat':      'Общее состояние удовлетворительное. Кожные покровы обычной окраски, тургор удовлетворительный. Аппетит, сон не нарушены.',
+    'no-complaints': 'Жалоб активных не предъявляет. Самочувствие удовлетворительное.',
+  };
+  document.getElementById('tmpl-sel').addEventListener('change', function() {
+    const ta = document.querySelector('.doc-section.active textarea');
+    if (!ta || !this.value) return;
+    if (TEMPLATES[this.value]) {
+      ta.value = (ta.value ? ta.value + '\n' : '') + TEMPLATES[this.value];
+      ta.focus();
+    }
+    this.value = '';
+  });
+
+  // Скачать как файл
+  document.getElementById('btn-save-file').addEventListener('click', () => {
+    const dt = dtInput.value.replace('T', ' ');
+    const typeText = sbType.options[sbType.selectedIndex].text;
+    const sections = [
+      ['(100) Жалобы при поступлении',  'ta-complaints'],
+      ['(200) Анамнез заболевания',      'ta-anamnesis_disease'],
+      ['(300) Анамнез жизни',            'ta-anamnesis_life'],
+      ['(400) Аллергологический анамнез','ta-allergy'],
+      ['(500) Объективные данные',       'ta-objective'],
+      ['Прочее',                         'ta-other'],
+      ['(800) Сведения об обследовании', 'ta-research'],
+      ['(900) Итоговая запись',          'ta-final'],
+      ['(700) Диагнозы',                 'ta-diagnosis'],
+    ];
+    let txt = `МЕДИЦИНСКАЯ ЗАПИСЬ\nПациент: ${patient.fullName}\nИИН: ${patient.iin}\nТип: ${typeText}\nДата: ${dt}\n${'='.repeat(50)}\n\n`;
+    sections.forEach(([title, id]) => {
+      const v = (document.getElementById(id)?.value || '').trim();
+      if (v) txt += `${title}\n${'-'.repeat(30)}\n${v}\n\n`;
+    });
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(new Blob([txt], {type:'text/plain;charset=utf-8'})),
+      download: `med-record_${patient.id}_${dt.replace(/[: ]/g,'-')}.txt`
+    });
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+
+  // ── Load saved draft ──────────────────────────────────────────────
+  const savedRecord = window.DmedStorage.getRecord(patientId, recordType);
+  if (savedRecord && savedRecord.fields) {
+    Object.entries(savedRecord.fields).forEach(([key, val]) => {
+      const ta = document.querySelector(`textarea[data-key="${key}"]`);
+      if (ta && val) ta.value = val;
+    });
+    if (savedRecord.rtype) {
+      const sbType = document.getElementById('sb-type');
+      if (sbType.querySelector(`option[value="${savedRecord.rtype}"]`)) sbType.value = savedRecord.rtype;
+    }
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────
+  document.getElementById('btn-save').addEventListener('click', () => {
+    const sbType = document.getElementById('sb-type');
+    const typeLabel = sbType.options[sbType.selectedIndex].text;
+    const now = new Date();
+    const data = {
+      rtype: sbType.value,
+      typeLabel,
+      savedAt: now.toISOString(),
+      dateStr: fmtDisp(now),
+      signed: false,
+      fields: {}
+    };
+    document.querySelectorAll('textarea[data-key]').forEach(ta => { data.fields[ta.dataset.key] = ta.value; });
+    window.DmedStorage.saveRecord(patientId, sbType.value, data);
+    const btn = document.getElementById('btn-save');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Сохранено';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+
+  // ── Sign ──────────────────────────────────────────────────────────
+  document.getElementById('btn-sign').addEventListener('click', () => {
+    const sbType = document.getElementById('sb-type');
+    const typeLabel = sbType.options[sbType.selectedIndex].text;
+    const now = new Date();
+    const data = {
+      rtype: sbType.value,
+      typeLabel,
+      savedAt: now.toISOString(),
+      dateStr: fmtDisp(now),
+      signed: true,
+      fields: {}
+    };
+    document.querySelectorAll('textarea[data-key]').forEach(ta => { data.fields[ta.dataset.key] = ta.value; });
+    window.DmedStorage.saveRecord(patientId, sbType.value, data);
+    const btn = document.getElementById('btn-sign');
+    btn.textContent = '✓ Подписан';
+    btn.style.background = '#2f8f63';
+    btn.disabled = true;
+  });
+
+  document.getElementById('btn-agree').addEventListener('click', () => alert('Согласия пациента (демо).'));
+
+  // ── Изменить ▾ ────────────────────────────────────────────────────
+  function toggleEditPatient(e) {
+    if (e) e.preventDefault();
+    const form = document.getElementById('edit-patient-form');
+    const link = document.getElementById('btn-edit-patient');
+    if (form.style.display === 'none') {
+      const ex = window.DmedStorage.getPatientExtra(patientId);
+      document.getElementById('inp-blood').value = ex.bloodGroup || patient.bloodGroup || '';
+      document.getElementById('inp-day').value = ex.currentDay || patient.currentDay || '';
+      form.style.display = '';
+      link.textContent = 'Изменить ▴';
+    } else {
+      form.style.display = 'none';
+      link.textContent = 'Изменить ▾';
+    }
+  }
+  function savePatientEdit() {
+    const blood = document.getElementById('inp-blood').value;
+    const day = parseInt(document.getElementById('inp-day').value) || null;
+    window.DmedStorage.savePatientExtra(patientId, { bloodGroup: blood, currentDay: day });
+    document.getElementById('sb-blood').textContent = 'Группа крови: ' + (blood || 'не указана');
+    document.getElementById('edit-patient-form').style.display = 'none';
+    document.getElementById('btn-edit-patient').textContent = 'Изменить ▾';
+  }
+
 </script>
 </body>
 </html>

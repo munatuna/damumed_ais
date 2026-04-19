@@ -1,0 +1,66 @@
+{
+  "manifest_version": 3,
+  "name": "Damumed Voice Assistant",
+  "version": "0.1.0",
+  "description": "AI-ассистент для голосового управления КМИС Дамумед. AIS Hack 3.0",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:*/*",
+    "http://127.0.0.1:*/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://*.dmed.kz/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*",
+        "https://*.dmed.kz/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*",
+        "https://*.dmed.kz/*"
+      ],
+      "js": [
+        "lib/speech.js",
+        "agent/prompts.js",
+        "agent/actions.js",
+        "agent/filler.js",
+        "agent/scheduler.js",
+        "content.js"
+      ],
+      "css": ["sidebar.css"],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Damumed Voice Assistant — настройки"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["sidebar.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

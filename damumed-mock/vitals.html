@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Показатели здоровья - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .vitals-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--dmed-surface-strong);
+    border-bottom: 1px solid var(--dmed-border);
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    width: 26px; height: 26px;
+    border: 1px solid #c2d1d5;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .nav-btn:hover { background: #e8eff0; }
+  .vitals-toolbar input[type=date] {
+    padding: 3px 8px; font-size: 12px;
+    border: 1px solid #c2d1d5; background: #fff;
+    width: 120px;
+  }
+  .vitals-toolbar label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; color: var(--dmed-muted); cursor: pointer;
+    margin-left: 10px;
+  }
+
+  .chart-wrap {
+    padding: 20px 16px 16px;
+    background: #fff;
+    position: relative;
+  }
+  .chart-title {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dmed-text);
+    margin-bottom: 12px;
+  }
+  canvas#vitalsChart {
+    max-height: 420px;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--dmed-muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="dmed-navbar">
+  <div class="logo">Dmed.Стационар</div>
+  <ul class="nav-menu">
+    <li><a href="index.html">Мои пациенты</a></li>
+    <li><a href="#" class="active">Показатели здоровья</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="name">МАХМУТХАН А.М.</div>
+    <div>Реабилитолог | РЦ «Акбобек»</div>
+  </div>
+</nav>
+
+<div class="dmed-container" style="padding-top:16px;">
+
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <a href="#" id="breadcrumb-patient"></a>
+    <span class="separator">›</span>
+    <span>Показатели здоровья</span>
+  </div>
+
+  <!-- Шапка пациента -->
+  <div class="patient-header" style="margin-bottom:14px;">
+    <div>
+      <h3 class="patient-name" id="patient-name"></h3>
+      <div class="patient-meta">
+        <span>Карта № <strong id="patient-id"></strong></span>
+        <span>Поступил: <span id="patient-admission"></span></span>
+        <span>Диагноз: <span id="patient-diagnosis"></span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Вкладки -->
+  <ul class="dmed-tabs">
+    <li><a href="patient.html?id="       id="tab-main">Главная</a></li>
+    <li><a href="medical-record.html?id=" id="tab-medical">Медицинские записи</a></li>
+    <li><a href="diagnoses.html?id="     id="tab-diagnoses">Диагнозы</a></li>
+    <li><a href="assignments.html?id="   id="tab-assignments">Назначения</a></li>
+    <li><a href="diary.html?id="         id="tab-diary">Дневниковые записи</a></li>
+    <li><a href="#" onclick="return false;">Операции</a></li>
+    <li><a href="vitals.html?id="        id="tab-vitals" class="active">Показатели здоровья</a></li>
+    <li><a href="#" onclick="return false;">Документы</a></li>
+    <li><a href="#" onclick="return false;">Прочее ▾</a></li>
+  </ul>
+
+  <!-- Панель показателей -->
+  <div class="dmed-panel" style="border-top:none; margin-bottom:0;">
+
+    <!-- Тулбар -->
+    <div class="vitals-toolbar">
+      <button class="nav-btn" id="btn-prev">◀</button>
+      <input type="date" id="range-date" />
+      <button class="nav-btn" id="btn-cal" onclick="document.getElementById('range-date').showPicker()">📅</button>
+      <button class="nav-btn" id="btn-next">▶</button>
+      <label>
+        <input type="checkbox" id="show-values" checked>
+        Отображать значения
+      </label>
+    </div>
+
+    <!-- График -->
+    <div class="chart-wrap">
+      <div class="chart-title">Показатели здоровья</div>
+      <div id="no-data" class="no-data" style="display:none;">
+        Нет данных. Заполните дневниковые записи с показателями.
+        <br><br>
+        <a href="diary.html?id=" id="link-diary" class="btn btn-primary btn-sm">+ Добавить запись</a>
+      </div>
+      <canvas id="vitalsChart"></canvas>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="storage.js"></script>
+<script src="data.js"></script>
+<script>
+const params    = new URLSearchParams(window.location.search);
+const patientId = params.get('id') || '352';
+const patient   = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+
+// Header
+document.getElementById('patient-name').textContent      = patient.fullName;
+document.getElementById('patient-id').textContent        = patient.id;
+document.getElementById('patient-admission').textContent = patient.admissionDate;
+document.getElementById('patient-diagnosis').textContent = patient.admissionDiagnosisMain;
+document.getElementById('breadcrumb-patient').textContent = patient.fullName;
+document.getElementById('breadcrumb-patient').href = 'patient.html?id=' + patientId;
+document.getElementById('link-diary').href += patientId;
+document.title = 'Показатели — ' + patient.fullName;
+
+// Tabs
+['tab-main','tab-medical','tab-diagnoses','tab-assignments','tab-diary','tab-vitals'].forEach(id => {
+  const a = document.getElementById(id);
+  if (a) {
+    const u = new URL(a.href, location.href);
+    u.searchParams.set('id', patientId);
+    a.href = u.toString();
+  }
+});
+
+// ── Build demo data from patient vitals + diary entries ──
+function buildDataPoints() {
+  const diaries = window.DmedStorage.getDiaries(patientId) || [];
+
+  // Parse admission date to generate synthetic data
+  const [dd, mm, yyyy] = patient.admissionDate.split('.').map(Number);
+  const admDate = new Date(yyyy, mm - 1, dd);
+
+  // Synthetic baseline from patient vitals
+  const base = patient.vitals || {};
+  const bpTop  = base.pressureTop  || 110;
+  const bpBot  = base.pressureBottom || 70;
+  const pulse  = base.pulse        || 84;
+  const temp   = base.temperature  || 36.5;
+
+  const points = [];
+
+  // Generate synthetic points for 14 days (morning + evening)
+  for (let day = 0; day < 14; day++) {
+    for (const hour of [8, 21]) {
+      const d = new Date(admDate);
+      d.setDate(d.getDate() + day);
+      d.setHours(hour, 0, 0, 0);
+
+      const jitter = (range) => (Math.random() - 0.5) * range;
+      points.push({
+        ts: d,
+        label: d.toLocaleDateString('ru', {day:'2-digit', month:'2-digit'}) + ' ' + String(hour).padStart(2,'0') + ':00',
+        adTop:  Math.round(bpTop  + jitter(14)),
+        adBot:  Math.round(bpBot  + jitter(10)),
+        pulse:  Math.round(pulse  + jitter(12)),
+        temp:   +(temp + jitter(0.4)).toFixed(1),
+      });
+    }
+  }
+
+  // Overwrite with real diary data where available
+  diaries.forEach(d => {
+    const v = d.vitals || {};
+    if (!v.temperature && !v.pulse && !v.pressure_top) return;
+    const ts = d.savedAt ? new Date(d.savedAt) : null;
+    if (!ts) return;
+    const label = ts.toLocaleDateString('ru', {day:'2-digit', month:'2-digit'}) + ' ' +
+                  ts.toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'});
+    const existing = points.find(p => Math.abs(p.ts - ts) < 6 * 3600 * 1000);
+    if (existing) {
+      if (v.temperature)   existing.temp  = parseFloat(v.temperature);
+      if (v.pulse)         existing.pulse = parseInt(v.pulse);
+      if (v.pressure_top)  existing.adTop = parseInt(v.pressure_top);
+      if (v.pressure_bottom) existing.adBot = parseInt(v.pressure_bottom);
+      existing.label = label;
+    }
+  });
+
+  return points;
+}
+
+// ── Range state ──
+let rangeStart = null;
+(function() {
+  const [dd,mm,yyyy] = patient.admissionDate.split('.').map(Number);
+  rangeStart = new Date(yyyy, mm-1, dd);
+  document.getElementById('range-date').value = rangeStart.toISOString().slice(0,10);
+})();
+
+document.getElementById('btn-prev').addEventListener('click', () => {
+  rangeStart.setDate(rangeStart.getDate() - 7);
+  document.getElementById('range-date').value = rangeStart.toISOString().slice(0,10);
+  updateChart();
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  rangeStart.setDate(rangeStart.getDate() + 7);
+  document.getElementById('range-date').value = rangeStart.toISOString().slice(0,10);
+  updateChart();
+});
+document.getElementById('range-date').addEventListener('change', e => {
+  rangeStart = new Date(e.target.value);
+  updateChart();
+});
+document.getElementById('show-values').addEventListener('change', updateChart);
+
+// ── Chart ──
+let chartInstance = null;
+const ALL_POINTS = buildDataPoints();
+
+function getVisiblePoints() {
+  const start = new Date(rangeStart);
+  start.setHours(0,0,0,0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 14);
+  return ALL_POINTS.filter(p => p.ts >= start && p.ts < end);
+}
+
+function updateChart() {
+  const pts = getVisiblePoints();
+
+  if (!pts.length) {
+    document.getElementById('no-data').style.display = '';
+    document.getElementById('vitalsChart').style.display = 'none';
+    return;
+  }
+  document.getElementById('no-data').style.display = 'none';
+  document.getElementById('vitalsChart').style.display = '';
+
+  const showVals = document.getElementById('show-values').checked;
+
+  const labels = pts.map(p => p.label);
+
+  const datalabelPlugin = showVals ? {
+    display: true,
+    align: 'top',
+    anchor: 'center',
+    font: { size: 10, weight: '600' },
+    formatter: v => v,
+    color: ctx => ctx.dataset.borderColor,
+  } : { display: false };
+
+  const datasets = [
+    {
+      label: 'АД верх.',
+      data: pts.map(p => p.adTop),
+      borderColor: '#e05252',
+      backgroundColor: 'transparent',
+      pointBackgroundColor: '#fff',
+      pointBorderColor: '#e05252',
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      borderWidth: 2,
+      tension: 0.3,
+      yAxisID: 'yBP',
+      datalabels: datalabelPlugin,
+    },
+    {
+      label: 'АД нижн.',
+      data: pts.map(p => p.adBot),
+      borderColor: '#2e7d32',
+      backgroundColor: 'transparent',
+      pointBackgroundColor: '#fff',
+      pointBorderColor: '#2e7d32',
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      borderWidth: 2,
+      tension: 0.3,
+      yAxisID: 'yBP',
+      datalabels: datalabelPlugin,
+    },
+    {
+      label: 'Пульс',
+      data: pts.map(p => p.pulse),
+      borderColor: '#1565c0',
+      backgroundColor: 'transparent',
+      pointBackgroundColor: '#fff',
+      pointBorderColor: '#1565c0',
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      borderWidth: 2,
+      tension: 0.3,
+      yAxisID: 'yBP',
+      datalabels: datalabelPlugin,
+    },
+    {
+      label: 'Температура',
+      data: pts.map(p => p.temp),
+      borderColor: '#8d6e1e',
+      backgroundColor: 'transparent',
+      pointBackgroundColor: '#fff',
+      pointBorderColor: '#8d6e1e',
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      borderWidth: 2,
+      tension: 0.3,
+      yAxisID: 'yTemp',
+      datalabels: datalabelPlugin,
+    },
+  ];
+
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(document.getElementById('vitalsChart'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 12 }, usePointStyle: true, pointStyleWidth: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const unit = ctx.dataset.label === 'Температура' ? '°C' :
+                           ctx.dataset.label === 'Пульс' ? ' уд/мин' : ' мм рт.ст.';
+              return ` ${ctx.dataset.label}: ${ctx.parsed.y}${unit}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#e8eeef' },
+          ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 30 }
+        },
+        yBP: {
+          type: 'linear',
+          position: 'left',
+          min: 50,
+          max: 170,
+          grid: { color: '#e8eeef' },
+          ticks: { font: { size: 10 }, stepSize: 10 },
+          title: { display: true, text: 'АД / Пульс', font: { size: 11 }, color: '#666' }
+        },
+        yTemp: {
+          type: 'linear',
+          position: 'right',
+          min: 35,
+          max: 42,
+          grid: { drawOnChartArea: false },
+          ticks: {
+            font: { size: 10 },
+            stepSize: 0.5,
+            callback: v => v.toFixed(1)
+          },
+          title: { display: true, text: 'Т° (°C)', font: { size: 11 }, color: '#8d6e1e' }
+        }
+      }
+    }
+  });
+}
+
+updateChart();
+</script>
+</body>
+</html>

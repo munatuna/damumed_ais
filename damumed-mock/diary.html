@@ -4,247 +4,619 @@
 <meta charset="UTF-8">
 <title>Дневниковая запись - Dmed.Стационар</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  #top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 7px 15px;
+    font-size: 12px;
+    color: #777;
+    flex-shrink: 0;
+  }
+  #top-bar .tb-info { display: flex; align-items: center; gap: 8px; }
+  #top-bar .tb-actions { display: flex; gap: 8px; }
+
+  #workspace {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #sidebar {
+    width: 300px;
+    min-width: 240px;
+    flex-shrink: 0;
+    background: var(--dmed-surface-alt);
+    border-right: 1px solid var(--dmed-border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sb-patient {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--dmed-border);
+    background: #fff;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+  }
+  .sb-avatar {
+    width: 46px; height: 46px;
+    background: #ddd; border: 1px solid #bbb; border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #999; flex-shrink: 0;
+  }
+  .sb-patient-info strong { display: block; font-size: 12px; color: #333; line-height: 1.4; }
+  .sb-patient-info small  { display: block; font-size: 11px; color: var(--dmed-muted); line-height: 1.5; }
+  .sb-patient-info a      { font-size: 11px; color: var(--dmed-primary); }
+
+  .sb-block-header {
+    background: var(--dmed-primary); color: #fff;
+    padding: 8px 12px; font-size: 12px; font-weight: 600;
+  }
+  .sb-block-body {
+    padding: 10px 12px; background: #fff;
+    border-bottom: 1px solid var(--dmed-border);
+  }
+  .sb-block-body .form-group { margin-bottom: 8px; }
+  .sb-block-body label {
+    display: block; font-size: 11px;
+    color: var(--dmed-muted); font-weight: 400; margin-bottom: 3px;
+  }
+  .sb-block-body .form-control { font-size: 12px; padding: 4px 7px; }
+  .sb-dt-row { display: flex; gap: 5px; align-items: center; }
+  .sb-dt-row input { flex: 1; font-size: 12px; }
+
+  #section-nav { list-style: none; margin: 0; padding: 0; background: #fff; }
+  #section-nav li { border-bottom: 1px solid #f0f0f0; }
+  #section-nav li a {
+    display: block; padding: 10px 16px;
+    font-size: 12px; color: #444;
+    text-decoration: none; transition: background 0.1s;
+  }
+  #section-nav li a:hover { background: #edf7f8; }
+  #section-nav li.active a {
+    background: var(--dmed-primary-soft); color: var(--dmed-primary);
+    font-weight: 600;
+    border-left: 3px solid var(--dmed-primary);
+    padding-left: 13px;
+  }
+
+  #canvas-area {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    background: var(--dmed-canvas); overflow: hidden;
+  }
+
+  #doc-toolbar {
+    background: var(--dmed-toolbar); border-bottom: 1px solid #bccdcf;
+    padding: 5px 12px;
+    display: flex; align-items: center; gap: 3px; flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .tb-btn {
+    background: transparent; border: 1px solid transparent;
+    border-radius: 2px; padding: 3px 7px;
+    font-size: 12px; cursor: pointer; color: #333;
+    min-width: 26px; text-align: center; line-height: 1.3;
+  }
+  .tb-btn:hover { background: #d3e1e4; border-color: #a9bec2; }
+  .tb-sep { width: 1px; height: 18px; background: #bbb; margin: 0 3px; }
+  .tb-sel {
+    font-size: 12px; padding: 2px 5px;
+    border: 1px solid #ccc; border-radius: 2px;
+    background: #fff; height: 24px;
+  }
+
+  #doc-scroll { flex: 1; overflow-y: auto; padding: 24px 20px; }
+
+  #doc-paper {
+    background: #fff;
+    max-width: 860px;
+    min-height: calc(100vh - 180px);
+    margin: 0 auto;
+    padding: 48px 58px 60px;
+    box-shadow: 0 3px 16px rgba(0,0,0,0.4);
+    position: relative;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px; line-height: 1.7;
+  }
+
+  #watermark {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  #watermark span {
+    position: absolute;
+    font-size: 52px; font-weight: bold;
+    color: rgba(0,0,0,0.055);
+    transform: rotate(-28deg);
+    white-space: nowrap; user-select: none;
+  }
+  #watermark span:nth-child(1) { top: 12%; left: -3%; }
+  #watermark span:nth-child(2) { top: 42%; left: 28%; }
+  #watermark span:nth-child(3) { top: 68%; left: -3%; }
+  #watermark span:nth-child(4) { top: 8%;  left: 52%; }
+
+  .doc-section { display: none; position: relative; z-index: 1; }
+  .doc-section.active { display: block; }
+
+  .doc-section-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10px; font-weight: 600; color: #aaa;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 14px; padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .doc-section textarea {
+    width: 100%; min-height: 480px;
+    border: none; outline: none; resize: vertical;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px; line-height: 1.9;
+    color: #1a1a1a; background: transparent; padding: 0; display: block;
+  }
+  .doc-section textarea::placeholder { color: #ccc; font-style: italic; }
+
+  /* Витальные поля внутри документа */
+  .vitals-form {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px; position: relative; z-index: 1;
+  }
+  .vitals-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .vf { display: flex; flex-direction: column; }
+  .vf label { font-size: 11px; color: var(--dmed-muted); margin-bottom: 3px; font-weight: 400; }
+  .vf input, .vf select {
+    padding: 5px 8px; font-size: 13px;
+    border: 1px solid #ccc; border-radius: 3px;
+    font-family: inherit; background: #fff;
+  }
+  .vf.sm input { width: 72px; }
+  .vf.md input { width: 110px; }
+  .vf.lg select { width: 170px; }
+  .bp-pair { display: flex; align-items: flex-end; gap: 4px; }
+  .bp-pair input { width: 58px; }
+  .bp-pair span { padding-bottom: 7px; color: #555; }
+
+  /* Чекбоксы процедур */
+  .proc-list { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; }
+  .proc-list label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0; font-weight: 400;
+    border-bottom: 1px solid #f5f5f5; cursor: pointer;
+  }
+  .proc-list input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; }
+</style>
 </head>
 <body>
 
-<nav class="dmed-navbar">
-  <div class="logo">Dmed.Стационар</div>
-  <ul class="nav-menu">
-    <li><a href="index.html">Мои пациенты</a></li>
-    <li><a href="#" class="active">Дневниковая запись</a></li>
-  </ul>
-  <div class="user-info">
-    <div class="name">МАХМУТХАН А.М.</div>
-    <div>Реабилитолог | РЦ «Акбобек»</div>
-  </div>
-</nav>
+<div id="app">
 
-<div class="dmed-container">
+  <!-- Навбар -->
+  <nav class="dmed-navbar" style="flex-shrink:0;">
+    <div class="logo">Dmed.Стационар</div>
+    <ul class="nav-menu">
+      <li><a href="index.html">Мои пациенты</a></li>
+      <li><a href="#" class="active">Дневниковая запись</a></li>
+    </ul>
+    <div class="user-info">
+      <div class="name">МАХМУТХАН А.М.</div>
+      <div>Реабилитолог | РЦ «Акбобек»</div>
+    </div>
+  </nav>
 
-  <div class="dmed-breadcrumb">
-    <a href="index.html">Главная</a>
-    <span class="separator">›</span>
-    <a id="back-to-patient" href="#">Карта пациента</a>
-    <span class="separator">›</span>
-    <span>Новая дневниковая запись</span>
-  </div>
-
-  <div class="patient-header">
-    <div>
-      <h3 class="patient-name" id="patient-name"></h3>
-      <div class="patient-meta">
-        <span>Карта № <strong id="patient-id"></strong></span>
-        <span>ИИН: <span id="patient-iin"></span></span>
-        <span>День курса: <strong id="patient-day"></strong></span>
-      </div>
+  <!-- Верхняя строка -->
+  <div id="top-bar">
+    <div class="tb-info">
+      <span style="color:var(--dmed-info);">ℹ</span>
+      <span>Системная дата на момент открытия: <strong id="sys-date-open"></strong></span>
+      <span style="color:#ccc;">|</span>
+      <span>В системе будут зафиксированы дата и время сохранения формы</span>
+    </div>
+    <div class="tb-actions">
+      <button class="btn btn-sm" id="btn-save-file">⬇ Скачать</button>
+      <button class="btn btn-sm btn-primary" id="btn-sign">Подписать</button>
+      <button class="btn btn-sm btn-success" id="btn-save">Сохранить</button>
     </div>
   </div>
 
-  <div class="dmed-panel">
-    <div class="dmed-panel-heading">
-      <h3>Дневниковая запись</h3>
-      <span class="text-muted" style="font-size: 12px;">
-        Дата:
-        <input type="text" id="dtRegDateTime" name="dtRegDateTime"
-               style="width: 130px; padding: 2px 6px; font-size: 12px;" readonly>
-      </span>
-    </div>
+  <!-- Рабочая область -->
+  <div id="workspace">
 
-    <div class="dmed-panel-body">
+    <!-- ===== ЛЕВАЯ ПАНЕЛЬ ===== -->
+    <div id="sidebar">
 
-      <!-- Витальные показатели - ключевая часть для демо.
-           ID совпадают с реальными из дампов Дамумеда (ntbTemperature и т.д.) -->
-      <div class="dmed-panel" style="background: #fafbfc;">
-        <div class="dmed-panel-heading" style="background: transparent; border-bottom: 1px dashed var(--dmed-border);">
-          <h4>Витальные показатели</h4>
-          <small class="text-muted">Скажите агенту: «пульс 82, давление 110 на 70, температура 36,6»</small>
+      <div class="sb-patient">
+        <div class="sb-avatar">👤</div>
+        <div class="sb-patient-info">
+          <strong id="sb-name">—</strong>
+          <small id="sb-iin">ИИН: —</small>
+          <small id="sb-blood">Группа крови: —</small>
+          <small id="sb-day">День курса: —</small>
+          <a href="#" id="btn-edit-patient" onclick="toggleEditPatient(event)">Изменить ▾</a>
+          <div id="edit-patient-form" style="display:none; padding:6px 0; font-size:12px;">
+            <div class="form-group">
+              <label>Группа крови</label>
+              <select class="form-control" id="inp-blood" style="font-size:11px; padding:3px 5px;">
+                <option value="">Не указана</option>
+                <option value="O(I) Rh+">O(I) Rh+</option><option value="O(I) Rh-">O(I) Rh-</option>
+                <option value="A(II) Rh+">A(II) Rh+</option><option value="A(II) Rh-">A(II) Rh-</option>
+                <option value="B(III) Rh+">B(III) Rh+</option><option value="B(III) Rh-">B(III) Rh-</option>
+                <option value="AB(IV) Rh+">AB(IV) Rh+</option><option value="AB(IV) Rh-">AB(IV) Rh-</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>День курса</label>
+              <input type="number" class="form-control" id="inp-day" min="1" max="14" style="font-size:11px; padding:3px 5px; width:60px;">
+            </div>
+            <button class="btn btn-xs btn-primary" onclick="savePatientEdit()">Сохранить</button>
+            <button class="btn btn-xs" onclick="toggleEditPatient(event)">Отмена</button>
+          </div>
         </div>
-        <div class="dmed-panel-body">
-          <div class="row">
-            <div class="col-2">
-              <div class="form-group">
-                <label for="ntbTemperature">Т° (°C)</label>
-                <input type="text" class="form-control" id="ntbTemperature" name="ntbTemperature"
-                       data-vital-key="temperature" placeholder="36.6">
-              </div>
-            </div>
-            <div class="col-2">
-              <div class="form-group">
-                <label for="ntbPulse">Пульс</label>
-                <input type="text" class="form-control" id="ntbPulse" name="ntbPulse"
-                       data-vital-key="pulse" placeholder="82">
-              </div>
-            </div>
-            <div class="col-3">
-              <div class="form-group">
-                <label>АД (сист./диаст.)</label>
-                <div style="display: flex; gap: 5px; align-items: center;">
-                  <input type="text" class="form-control" id="ntbTopPressure" name="ntbTopPressure"
-                         data-vital-key="pressure_top" placeholder="110" style="width: 60px;">
-                  <span>/</span>
-                  <input type="text" class="form-control" id="ntbBottomPressure" name="ntbBottomPressure"
-                         data-vital-key="pressure_bottom" placeholder="70" style="width: 60px;">
+      </div>
+
+      <div class="sb-block-header">Дневниковая запись</div>
+      <div class="sb-block-body">
+        <div class="form-group">
+          <label>Тип записи</label>
+          <select class="form-control" id="sb-type">
+            <option value="diary">Дневниковая запись</option>
+            <option value="visit">Осмотр врача</option>
+            <option value="procedure">Процедурная запись</option>
+            <option value="shift">Передача дежурства</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Дата регистрации</label>
+          <div class="sb-dt-row">
+            <input type="datetime-local" class="form-control" id="dtRegDateTime">
+            <button class="btn btn-xs" id="btn-now">Сейчас</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Форма</label>
+          <select class="form-control" id="sb-form">
+            <option value="">Пустой</option>
+            <option value="rehab">Реабилитация</option>
+            <option value="std">Стандартный дневник</option>
+          </select>
+        </div>
+      </div>
+
+      <ul id="section-nav">
+        <li class="active" data-sec="vitals"><a href="#">Витальные показатели</a></li>
+        <li data-sec="complaints"><a href="#">Жалобы при поступлении</a></li>
+        <li data-sec="anamnesis_disease"><a href="#">Анамнез заболевания</a></li>
+        <li data-sec="allergy"><a href="#">Аллергологический анамнез</a></li>
+        <li data-sec="objective"><a href="#">Объективные данные</a></li>
+        <li data-sec="other"><a href="#">Прочее</a></li>
+        <li data-sec="research"><a href="#">Сведения об обследовании</a></li>
+        <li data-sec="final"><a href="#">Итоговая запись</a></li>
+        <li data-sec="procedures"><a href="#">Процедуры</a></li>
+      </ul>
+
+    </div>
+    <!-- /sidebar -->
+
+    <!-- ===== ДОКУМЕНТ ===== -->
+    <div id="canvas-area">
+
+      <div id="doc-toolbar">
+        <button class="tb-btn" onclick="wrapSel('**','**')"><b>B</b></button>
+        <button class="tb-btn" onclick="wrapSel('_','_')"><i>I</i></button>
+        <button class="tb-btn" onclick="wrapSel('__','__')"><u>U</u></button>
+        <button class="tb-btn" onclick="wrapSel('~~','~~')"><s>S</s></button>
+        <span class="tb-sep"></span>
+        <select class="tb-sel" id="tmpl-sel">
+          <option value="">Шаблон ▾</option>
+          <option value="no-complaints">Жалоб нет</option>
+          <option value="allergy-none">Аллергоанамнез спокоен</option>
+          <option value="cond-sat">Состояние удовлетворительное</option>
+          <option value="dynamics-pos">Положительная динамика</option>
+        </select>
+        <span class="tb-sep"></span>
+        <button class="tb-btn" onclick="clearSec()">🗑 Очистить</button>
+      </div>
+
+      <div id="doc-scroll">
+        <div id="doc-paper">
+
+          <div id="watermark">
+            <span id="wm1"></span><span id="wm2"></span>
+            <span id="wm3"></span><span id="wm4"></span>
+          </div>
+
+          <!-- Витальные показатели -->
+          <div class="doc-section active" id="sec-vitals">
+            <div class="doc-section-label">Витальные показатели</div>
+            <div class="vitals-form">
+              <div class="vitals-row">
+                <div class="vf sm">
+                  <label>Т° (°C)</label>
+                  <input type="text" id="ntbTemperature" data-vital-key="temperature" placeholder="36.6">
+                </div>
+                <div class="vf sm">
+                  <label>Пульс</label>
+                  <input type="text" id="ntbPulse" data-vital-key="pulse" placeholder="82">
+                </div>
+                <div class="vf">
+                  <label>АД (сист./диаст.)</label>
+                  <div class="bp-pair">
+                    <input type="text" id="ntbTopPressure" data-vital-key="pressure_top" placeholder="110">
+                    <span>/</span>
+                    <input type="text" id="ntbBottomPressure" data-vital-key="pressure_bottom" placeholder="70">
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="col-2">
-              <div class="form-group">
-                <label for="ntbBreath">ЧДД</label>
-                <input type="text" class="form-control" id="ntbBreath" name="ntbBreath"
-                       data-vital-key="breath" placeholder="20">
-              </div>
-            </div>
-            <div class="col-2">
-              <div class="form-group">
-                <label for="ntbSaturation">SpO2 (%)</label>
-                <input type="text" class="form-control" id="ntbSaturation" name="ntbSaturation"
-                       data-vital-key="saturation" placeholder="98">
-              </div>
+          </div>
+
+          <div class="doc-section" id="sec-complaints">
+            <div class="doc-section-label">(100) Жалобы при поступлении</div>
+            <textarea id="ta-complaints" data-key="complaints"
+              placeholder="Жалоб не предъявляет. Самочувствие удовлетворительное..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-anamnesis_disease">
+            <div class="doc-section-label">(200) Анамнез заболевания</div>
+            <textarea id="ta-anamnesis_disease" data-key="anamnesis_disease"
+              placeholder="Состоит на диспансерном учёте с..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-allergy">
+            <div class="doc-section-label">(400) Аллергологический анамнез</div>
+            <textarea id="ta-allergy" data-key="allergy"
+              placeholder="Аллергоанамнез спокоен."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-objective">
+            <div class="doc-section-label">(500) Объективные данные</div>
+            <textarea id="ta-objective" data-key="objective"
+              placeholder="Кожные покровы обычной окраски...&#10;Дыхание везикулярное, хрипов нет..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-other">
+            <div class="doc-section-label">Прочее</div>
+            <textarea id="ta-other" data-key="other"
+              placeholder="Дополнительные сведения..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-research">
+            <div class="doc-section-label">Сведения об обследовании</div>
+            <textarea id="ta-research" data-key="research"
+              placeholder="Результаты анализов, исследований..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-final">
+            <div class="doc-section-label">Итоговая запись — описание состояния и динамики</div>
+            <textarea id="ta-final" data-key="note"
+              placeholder="Жалоб нет. Общее состояние удовлетворительное. Аппетит, сон не нарушены...&#10;&#10;Отмечается положительная динамика..."></textarea>
+          </div>
+
+          <div class="doc-section" id="sec-procedures">
+            <div class="doc-section-label">Процедуры выполнены</div>
+            <div class="proc-list">
+              <label><input type="checkbox" data-proc="Дыхательная гимнастика"> Дыхательная гимнастика</label>
+              <label><input type="checkbox" data-proc="Кинезотерапия"> Кинезотерапия</label>
+              <label><input type="checkbox" data-proc="Гидрокинезотерапия"> Гидрокинезотерапия</label>
+              <label><input type="checkbox" data-proc="Массаж"> Массаж грудной клетки</label>
+              <label><input type="checkbox" data-proc="Аэрозольтерапия"> Аэрозольтерапия</label>
+              <label><input type="checkbox" data-proc="Физиотерапия"> Физиотерапия</label>
+              <label><input type="checkbox" data-proc="ЛФК"> ЛФК</label>
             </div>
           </div>
 
-          <div class="row">
-            <div class="col-3">
-              <div class="form-group">
-                <label for="cmbResuscitationStatus">Состояние</label>
-                <select class="form-control" id="cmbResuscitationStatus" name="cmbResuscitationStatus"
-                        data-vital-key="status">
-                  <option value="">— выбрать —</option>
-                  <option value="удовлетворительное">удовлетворительное</option>
-                  <option value="средней тяжести">средней тяжести</option>
-                  <option value="тяжёлое">тяжёлое</option>
-                  <option value="крайне тяжёлое">крайне тяжёлое</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-2">
-              <div class="form-group">
-                <label for="ntbWeight">Вес (кг)</label>
-                <input type="text" class="form-control" id="ntbWeight" name="ntbWeight"
-                       data-vital-key="weight" placeholder="31">
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-
-      <!-- Свободный текст дневника -->
-      <div class="form-group">
-        <label for="diary-note">Описание состояния и динамики</label>
-        <textarea class="form-control" id="diary-note" name="diary-note"
-                  data-vital-key="note"
-                  rows="8"
-                  placeholder="Жалоб нет. Общее состояние удовлетворительное. Аппетит, сон не нарушены..."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Процедуры выполнены:</label>
-        <div id="procedures-check">
-          <label style="font-weight: normal; margin-right: 15px;">
-            <input type="checkbox" data-proc="Дыхательная гимнастика"> Дыхательная гимнастика
-          </label>
-          <label style="font-weight: normal; margin-right: 15px;">
-            <input type="checkbox" data-proc="Кинезотерапия"> Кинезотерапия
-          </label>
-          <label style="font-weight: normal; margin-right: 15px;">
-            <input type="checkbox" data-proc="Гидрокинезотерапия"> Гидрокинезотерапия
-          </label>
-          <label style="font-weight: normal; margin-right: 15px;">
-            <input type="checkbox" data-proc="Массаж"> Массаж грудной клетки
-          </label>
-          <label style="font-weight: normal; margin-right: 15px;">
-            <input type="checkbox" data-proc="Аэрозольтерапия"> Аэрозольтерапия
-          </label>
-        </div>
-      </div>
-
-      <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
-        <button class="btn" onclick="history.back();">Отмена</button>
-        <button class="btn btn-primary" id="save-diary">Сохранить</button>
-        <button class="btn btn-success" id="sign-diary">Сохранить и подписать</button>
-      </div>
-
     </div>
-  </div>
 
-  <div class="text-muted" style="font-size: 11px; text-align: center; padding: 10px;">
-    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
   </div>
 </div>
 
+<script src="storage.js"></script>
 <script src="data.js"></script>
 <script>
   const params = new URLSearchParams(window.location.search);
   const patientId = params.get('id') || '352';
   const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+  const extra = window.DmedStorage.getPatientExtra(patientId);
 
-  document.getElementById('patient-name').textContent = patient.fullName;
-  document.getElementById('patient-id').textContent = patient.id;
-  document.getElementById('patient-iin').textContent = patient.iin;
-  document.getElementById('patient-day').textContent = patient.currentDay + '/14';
-  document.getElementById('back-to-patient').href = 'patient.html?id=' + patient.id;
-  document.title = 'Дневник - ' + patient.fullName;
+  document.getElementById('sb-name').textContent  = patient.fullName;
+  document.getElementById('sb-iin').textContent   = 'ИИН: ' + patient.iin;
+  document.getElementById('sb-blood').textContent = 'Группа крови: ' + (extra.bloodGroup || patient.bloodGroup || 'не указана');
+  document.getElementById('sb-day').textContent   = 'День курса: ' + (extra.currentDay || patient.currentDay) + '/14';
+  document.title = 'Дневник – ' + patient.fullName;
 
-  // Дата записи
-  const now = new Date();
-  document.getElementById('dtRegDateTime').value = now.toLocaleString('ru', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  }).replace(',', '');
+  const wmText = patient.id + ' ' + patient.id;
+  ['wm1','wm2','wm3','wm4'].forEach(id => document.getElementById(id).textContent = wmText);
 
-  // Кнопки
-  document.getElementById('save-diary').addEventListener('click', () => {
-    alert('Дневник сохранён (демо).');
+  function toLocalISO(d) {
+    const p = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  function fmtDisp(d) {
+    const p = n => String(n).padStart(2,'0');
+    return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  const dtInput = document.getElementById('dtRegDateTime');
+  dtInput.value = toLocalISO(new Date());
+  document.getElementById('sys-date-open').textContent = fmtDisp(new Date());
+
+  document.getElementById('btn-now').addEventListener('click', () => {
+    dtInput.value = toLocalISO(new Date());
   });
-  document.getElementById('sign-diary').addEventListener('click', () => {
-    alert('Дневник подписан (демо).');
+
+  const navItems = document.querySelectorAll('#section-nav li');
+  navItems.forEach(li => {
+    li.querySelector('a').addEventListener('click', e => {
+      e.preventDefault();
+      navItems.forEach(i => i.classList.remove('active'));
+      li.classList.add('active');
+      document.querySelectorAll('.doc-section').forEach(s => s.classList.remove('active'));
+      const sec = document.getElementById('sec-' + li.dataset.sec);
+      if (sec) {
+        sec.classList.add('active');
+        const ta = sec.querySelector('textarea');
+        if (ta) setTimeout(() => ta.focus(), 50);
+      }
+    });
+  });
+
+  function wrapSel(open, close) {
+    const ta = document.querySelector('.doc-section.active textarea');
+    if (!ta) return;
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    ta.setRangeText(open + ta.value.substring(s, e) + close, s, e, 'select');
+    ta.focus();
+  }
+
+  function clearSec() {
+    const ta = document.querySelector('.doc-section.active textarea');
+    if (ta && confirm('Очистить этот раздел?')) { ta.value = ''; ta.focus(); }
+  }
+
+  const TEMPLATES = {
+    'no-complaints':  'Жалоб активных не предъявляет. Самочувствие удовлетворительное.',
+    'allergy-none':   'Аллергологический анамнез спокоен. Лекарственной непереносимости не выявлено.',
+    'cond-sat':       'Общее состояние удовлетворительное. Кожные покровы обычной окраски, тургор удовлетворительный. Аппетит, сон не нарушены.',
+    'dynamics-pos':   'Отмечается положительная динамика в состоянии пациента. Продолжается реабилитационное лечение в прежнем объёме.',
+  };
+  document.getElementById('tmpl-sel').addEventListener('change', function() {
+    const ta = document.querySelector('.doc-section.active textarea');
+    if (!ta || !this.value) return;
+    if (TEMPLATES[this.value]) {
+      ta.value = (ta.value ? ta.value + '\n' : '') + TEMPLATES[this.value];
+      ta.focus();
+    }
+    this.value = '';
+  });
+
+  // ── Save diary to localStorage ────────────────────────────────────
+  function saveDiaryEntry(signed) {
+    const entry = {
+      id: 'diary_' + Date.now(),
+      date: dtInput.value,
+      savedAt: new Date().toISOString(),
+      signed: signed || false,
+      vitals: {},
+      sections: {},
+      procedures: []
+    };
+    document.querySelectorAll('[data-vital-key]').forEach(el => {
+      if (el.value) entry.vitals[el.dataset.vitalKey] = el.value;
+    });
+    document.querySelectorAll('textarea[data-key]').forEach(ta => {
+      if (ta.value.trim()) entry.sections[ta.dataset.key] = ta.value.trim();
+    });
+    entry.procedures = [...document.querySelectorAll('[data-proc]:checked')].map(cb => cb.getAttribute('data-proc'));
+    window.DmedStorage.saveDiary(patientId, entry);
+    return entry;
+  }
+
+  document.getElementById('btn-save').addEventListener('click', () => {
+    saveDiaryEntry(false);
+    const btn = document.getElementById('btn-save');
+    btn.textContent = '✓ Сохранено';
+    setTimeout(() => { btn.textContent = 'Сохранить'; }, 2000);
+  });
+  document.getElementById('btn-sign').addEventListener('click', () => {
+    saveDiaryEntry(true);
     window.location.href = 'patient.html?id=' + patient.id;
   });
 
-  // API для агента: заполнение vitals
-  window.addEventListener('dmed-fill-diary', (e) => {
-    const { vitals = {}, note, procedures_done = [] } = e.detail || {};
-
-    // Заполняем поля vitals по data-vital-key
-    Object.entries(vitals).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === '') return;
-      const field = document.querySelector(`[data-vital-key="${key}"]`);
-      if (field) {
-        field.value = value;
-        field.classList.remove('ai-filled-animation');
-        void field.offsetWidth;
-        field.classList.add('ai-filled-animation');
-        const group = field.closest('.form-group');
-        if (group && !group.querySelector('.ai-badge')) {
-          const lbl = group.querySelector('label');
-          if (lbl) {
-            const b = document.createElement('span');
-            b.className = 'ai-badge';
-            lbl.appendChild(b);
-          }
-        }
-      }
-    });
-
-    // Свободный текст
-    if (note) {
-      const ta = document.getElementById('diary-note');
-      ta.value = note;
-      ta.classList.remove('ai-filled-animation');
-      void ta.offsetWidth;
-      ta.classList.add('ai-filled-animation');
+  // ── Изменить ▾ ────────────────────────────────────────────────────
+  function toggleEditPatient(e) {
+    if (e) e.preventDefault();
+    const form = document.getElementById('edit-patient-form');
+    const link = document.getElementById('btn-edit-patient');
+    if (form.style.display === 'none') {
+      const ex = window.DmedStorage.getPatientExtra(patientId);
+      document.getElementById('inp-blood').value = ex.bloodGroup || patient.bloodGroup || '';
+      document.getElementById('inp-day').value = ex.currentDay || patient.currentDay || '';
+      form.style.display = '';
+      link.textContent = 'Изменить ▴';
+    } else {
+      form.style.display = 'none';
+      link.textContent = 'Изменить ▾';
     }
+  }
+  function savePatientEdit() {
+    const blood = document.getElementById('inp-blood').value;
+    const day = parseInt(document.getElementById('inp-day').value) || null;
+    window.DmedStorage.savePatientExtra(patientId, { bloodGroup: blood, currentDay: day });
+    document.getElementById('sb-blood').textContent = 'Группа крови: ' + (blood || 'не указана');
+    if (day) document.getElementById('sb-day').textContent = 'День курса: ' + day + '/14';
+    document.getElementById('edit-patient-form').style.display = 'none';
+    document.getElementById('btn-edit-patient').textContent = 'Изменить ▾';
+  }
 
-    // Чекбоксы процедур - ищем по подстроке
-    procedures_done.forEach(name => {
-      document.querySelectorAll('#procedures-check input[type=checkbox]').forEach(cb => {
-        const proc = (cb.getAttribute('data-proc') || '').toLowerCase();
-        if (proc.includes(name.toLowerCase()) || name.toLowerCase().includes(proc)) {
+  document.getElementById('btn-save-file').addEventListener('click', () => {
+    const dt = dtInput.value.replace('T', ' ');
+    const sbType = document.getElementById('sb-type');
+    const vitalsEl = ['ntbTemperature','ntbPulse','ntbTopPressure','ntbBottomPressure','ntbBreath','ntbSaturation','ntbWeight'];
+    const vitalsLbl = ['Т°','Пульс','АД сист','АД диаст','ЧДД','SpO2','Вес'];
+    const vParts = vitalsEl.map((id,i) => { const v = document.getElementById(id)?.value; return v ? `${vitalsLbl[i]}: ${v}` : null; }).filter(Boolean);
+    const st = document.getElementById('cmbStatus')?.value;
+    if (st) vParts.push('Состояние: ' + st);
+
+    let txt = `ДНЕВНИКОВАЯ ЗАПИСЬ\nПациент: ${patient.fullName}\nИИН: ${patient.iin}\nТип: ${sbType.options[sbType.selectedIndex].text}\nДата: ${dt}\n${'='.repeat(50)}\n\n`;
+    if (vParts.length) txt += `Витальные показатели\n${'-'.repeat(30)}\n${vParts.join(', ')}\n\n`;
+    [
+      ['Жалобы при поступлении',   'ta-complaints'],
+      ['Анамнез заболевания',       'ta-anamnesis_disease'],
+      ['Аллергологический анамнез', 'ta-allergy'],
+      ['Объективные данные',        'ta-objective'],
+      ['Прочее',                    'ta-other'],
+      ['Сведения об обследовании',  'ta-research'],
+      ['Итоговая запись',           'ta-final'],
+    ].forEach(([title, id]) => {
+      const v = (document.getElementById(id)?.value || '').trim();
+      if (v) txt += `${title}\n${'-'.repeat(30)}\n${v}\n\n`;
+    });
+    const procs = [...document.querySelectorAll('[data-proc]')].filter(c => c.checked).map(c => c.getAttribute('data-proc'));
+    if (procs.length) txt += `Процедуры\n${'-'.repeat(30)}\n${procs.join(', ')}\n\n`;
+
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(new Blob([txt], {type:'text/plain;charset=utf-8'})),
+      download: `diary_${patient.id}_${dt.replace(/[: ]/g,'-')}.txt`
+    });
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+
+
+  // Module 4: авто-добавление записи при отметке выполненной процедуры
+  window.addEventListener('dmed-procedure-completed', e => {
+    const { diaryNote, procName, timeStr } = e.detail || {};
+    const ta = document.getElementById('ta-final');
+    if (ta && diaryNote) {
+      ta.value = (ta.value ? ta.value + '\n' : '') + diaryNote;
+      ta.classList.add('ai-filled-animation');
+      setTimeout(() => ta.classList.remove('ai-filled-animation'), 1500);
+    }
+    // Отмечаем чекбокс если есть совпадение
+    if (procName) {
+      document.querySelectorAll('[data-proc]').forEach(cb => {
+        if ((cb.getAttribute('data-proc') || '').toLowerCase().includes(procName.split(' ')[0].toLowerCase())) {
           cb.checked = true;
         }
       });
-    });
+    }
   });
+
 </script>
 </body>
 </html>

@@ -4,6 +4,287 @@
 <meta charset="UTF-8">
 <title>Назначения - Dmed.Стационар</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+/* ── Toolbar ── */
+.assign-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--dmed-surface-strong);
+  border-bottom: 1px solid var(--dmed-border);
+  flex-wrap: wrap;
+}
+.assign-toolbar .nav-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.assign-toolbar .nav-date input[type=date] {
+  padding: 3px 7px;
+  font-size: 12px;
+  border: 1px solid #c2d1d5;
+  background: #fff;
+  color: var(--dmed-text);
+  width: 110px;
+}
+.nav-btn {
+  width: 26px; height: 26px;
+  border: 1px solid #c2d1d5;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.nav-btn:hover { background: #e8eff0; }
+.mode-btn {
+  padding: 3px 10px;
+  font-size: 12px;
+  border: 1px solid #c2d1d5;
+  background: #fff;
+  cursor: pointer;
+  color: var(--dmed-text);
+}
+.mode-btn.active { background: var(--dmed-primary-soft); border-color: var(--dmed-primary); }
+
+.assign-toolbar .sep { width: 1px; height: 22px; background: #c2d1d5; margin: 0 4px; }
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: var(--dmed-surface-alt);
+  border-bottom: 1px solid var(--dmed-border);
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.filter-row label { color: var(--dmed-muted); margin-right: 2px; }
+.filter-row select, .filter-row input {
+  padding: 3px 7px;
+  font-size: 12px;
+  border: 1px solid #c2d1d5;
+  background: #fff;
+  color: var(--dmed-text);
+}
+.filter-row select { width: 140px; }
+.filter-row input  { width: 180px; }
+
+/* ── Action buttons (top-right) ── */
+.assign-action-btns {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.aa-btn {
+  width: 28px; height: 28px;
+  border: 1px solid #c2d1d5;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.aa-btn.green { background: var(--dmed-success); border-color: #277653; color: #fff; font-size: 18px; font-weight: 300; }
+.aa-btn:hover:not(.green) { background: #e8eff0; }
+.aa-btn.green:hover { background: #277653; }
+
+/* ── Grid ── */
+.assign-grid-wrap { overflow-x: auto; }
+.assign-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 800px;
+}
+.assign-grid th, .assign-grid td {
+  border: 1px solid var(--dmed-border);
+  padding: 0;
+  vertical-align: middle;
+}
+.assign-grid th {
+  background: var(--dmed-surface-strong);
+  font-weight: 600;
+  color: var(--dmed-muted);
+  text-align: center;
+  padding: 6px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.assign-grid .proc-cell {
+  padding: 5px 10px;
+  font-weight: 700;
+  color: var(--dmed-text);
+  background: #f0f5f6;
+  min-width: 220px;
+  max-width: 280px;
+  font-size: 12px;
+}
+.assign-grid .role-cell {
+  padding: 4px 10px;
+  color: var(--dmed-muted);
+  font-size: 11px;
+  background: #fff;
+  min-width: 80px;
+}
+.assign-grid .day-cell {
+  text-align: center;
+  width: 62px;
+  min-width: 62px;
+  cursor: pointer;
+  position: relative;
+  height: 30px;
+}
+.assign-grid .day-cell .cnt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 10px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.day-cell.done   { background: #d5eed8; }
+.day-cell.sched  { background: #fff8e1; }
+.day-cell.empty  { background: #fff; }
+.day-cell.done .cnt   { color: #1a7a3c; }
+.day-cell.sched .cnt  { color: #b87800; }
+.day-cell:hover { filter: brightness(0.94); }
+.proc-header-row td { background: #e8f0f2 !important; }
+
+/* ── Diet/Режим inline badge ── */
+.extra-row td.proc-cell {
+  font-weight: 600;
+  color: var(--dmed-primary);
+  font-size: 12px;
+}
+
+/* ── Dropdown menu ── */
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%; right: 0;
+  background: #fff;
+  border: 1px solid #c2d1d5;
+  min-width: 160px;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  font-size: 13px;
+}
+.dropdown-menu.open { display: block; }
+.dropdown-item {
+  padding: 8px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  color: var(--dmed-text);
+}
+.dropdown-item:hover { background: #f0f7f8; }
+
+/* ── Modals ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff;
+  width: 580px;
+  max-width: 96vw;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+.modal-head {
+  background: #1a6b7c;
+  color: #fff;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-tabs {
+  display: flex;
+  background: #f3f3f3;
+  border-bottom: 1px solid #ddd;
+}
+.modal-tab {
+  padding: 8px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  border-right: 1px solid #ddd;
+  color: #555;
+  user-select: none;
+}
+.modal-tab.active {
+  background: #fff;
+  color: var(--dmed-primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--dmed-primary);
+  margin-bottom: -1px;
+}
+.modal-subtabs {
+  display: flex;
+  background: #e8eef0;
+  border-bottom: 1px solid #ddd;
+}
+.modal-subtab {
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #666;
+  user-select: none;
+}
+.modal-subtab.active {
+  background: var(--dmed-primary-soft);
+  color: var(--dmed-primary);
+  font-weight: 600;
+}
+.modal-body { padding: 0; }
+.tpl-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tpl-table th { background: #f0f5f6; padding: 7px 12px; text-align: left; border-bottom: 1px solid #ddd; color: #666; font-weight: 600; }
+.tpl-table td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+.tpl-table tr:hover td { background: #f0f7f8; }
+.tpl-table tr.selected td { background: var(--dmed-primary-soft); color: var(--dmed-primary); font-weight: 600; }
+.tpl-edit-btn { color: var(--dmed-primary); border: 1px solid var(--dmed-primary-muted); background: var(--dmed-primary-soft); padding: 2px 6px; cursor: pointer; font-size: 11px; }
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-top: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  font-size: 11px;
+  color: #888;
+}
+.modal-footer .pager { display: flex; gap: 4px; }
+.modal-footer .pager button {
+  width: 22px; height: 22px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 11px;
+}
+.modal-footer .pager .active-pg { background: var(--dmed-primary); color: #fff; border-color: var(--dmed-primary); }
+.modal-actions { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid #ddd; background: #f9f9f9; justify-content: flex-end; }
+.btn-modal-cancel { padding: 5px 14px; border: 1px solid #c2d1d5; background: #fff; font-size: 12px; cursor: pointer; }
+.btn-modal-ok { padding: 5px 16px; background: #1a6b7c; border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+/* ── Extra (Diet/Mode) modal ── */
+.extra-form { padding: 16px 20px; }
+.extra-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.extra-form label { display: block; font-size: 11px; color: var(--dmed-muted); margin-bottom: 4px; font-weight: 600; }
+.extra-form input, .extra-form select, .extra-form textarea {
+  width: 100%; padding: 5px 8px; font-size: 12px;
+  border: 1px solid #c2d1d5; background: #fff;
+}
+.extra-form textarea { min-height: 60px; }
+</style>
 </head>
 <body>
 
@@ -19,7 +300,7 @@
   </div>
 </nav>
 
-<div class="dmed-container">
+<div class="dmed-container" style="padding-top: 16px;">
 
   <div class="dmed-breadcrumb">
     <a href="index.html">Главная</a>
@@ -29,7 +310,8 @@
     <span>Назначения</span>
   </div>
 
-  <div class="patient-header">
+  <!-- Шапка пациента -->
+  <div class="patient-header" style="margin-bottom: 14px;">
     <div>
       <h3 class="patient-name" id="patient-name"></h3>
       <div class="patient-meta">
@@ -38,168 +320,862 @@
         <span>Диагноз: <span id="patient-diagnosis"></span></span>
       </div>
     </div>
-    <div>
-      <button class="btn btn-primary" id="btn-generate-schedule">
-        ✨ Сгенерировать расписание (AI)
-      </button>
-    </div>
+    <button class="btn btn-primary" id="btn-generate-schedule">✨ Сгенерировать расписание (AI)</button>
   </div>
 
-  <div class="dmed-panel">
-    <div class="dmed-panel-heading">
-      <h3>Лист врачебных назначений — 9 рабочих дней</h3>
-      <small class="text-muted" id="schedule-info">Расписание не сформировано</small>
+  <!-- Вкладки пациента -->
+  <ul class="dmed-tabs" id="mh-navigation">
+    <li><a href="patient.html?id="       id="tab-main">Главная</a></li>
+    <li><a href="medical-record.html?id=" id="tab-medical">Медицинские записи</a></li>
+    <li><a href="diagnoses.html?id="     id="tab-diagnoses">Диагнозы</a></li>
+    <li><a href="assignments.html?id="   id="tab-assignments" class="active">Назначения</a></li>
+    <li><a href="diary.html?id="         id="tab-diary">Дневниковые записи</a></li>
+    <li><a href="#" onclick="return false;">Операции</a></li>
+    <li><a href="#" onclick="return false;">Показатели здоровья</a></li>
+    <li><a href="#" onclick="return false;">Документы</a></li>
+    <li><a href="#" onclick="return false;">Прочее ▾</a></li>
+  </ul>
+
+  <!-- Главная панель назначений -->
+  <div class="dmed-panel" style="border-top: none; margin-bottom: 16px;">
+
+    <!-- Панель инструментов -->
+    <div class="assign-toolbar">
+      <!-- Чекбоксы -->
+      <label style="font-size:11px;display:flex;gap:4px;align-items:center;color:var(--dmed-muted);">
+        <input type="checkbox" checked> Показать все
+      </label>
+      <label style="font-size:11px;display:flex;gap:4px;align-items:center;color:var(--dmed-muted);">
+        <input type="checkbox" checked> Показать назначения приёмного покоя
+      </label>
+      <div class="sep"></div>
+      <!-- Навигация по дате -->
+      <span style="font-size:11px;color:var(--dmed-muted);">по дням</span>
+      <div class="nav-date">
+        <button class="nav-btn" id="btn-prev-date">◀</button>
+        <input type="date" id="start-date" />
+        <button class="nav-btn" id="btn-next-date">▶</button>
+      </div>
+      <!-- Action buttons справа -->
+      <div class="assign-action-btns">
+        <button class="aa-btn green" id="btn-open-tpl" title="Добавить из шаблона">+</button>
+        <div style="position:relative;">
+          <button class="aa-btn" id="btn-extra" title="Добавить диету / режим">★</button>
+          <div class="dropdown-menu" id="extra-dropdown">
+            <div class="dropdown-item" data-extra="diet">🥗 Диета</div>
+            <div class="dropdown-item" data-extra="mode">🛏 Режим</div>
+            <div class="dropdown-item" data-extra="drug">💊 Лекарства</div>
+          </div>
+        </div>
+        <button class="aa-btn" title="Печать" onclick="window.print()">🖨</button>
+        <button class="aa-btn" title="Настройки колонок">☰</button>
+      </div>
     </div>
-    <div class="dmed-panel-body" style="padding: 0; overflow-x: auto;">
-      <table class="dmed-table" id="assignmentTable" style="min-width: 1000px;">
-        <thead id="schedule-head">
+
+    <!-- Строка фильтров -->
+    <div class="filter-row">
+      <label>Тип назначения</label>
+      <select id="f-type">
+        <option value="">Все</option>
+        <option>Процедура</option>
+        <option>Диета</option>
+        <option>Режим</option>
+        <option>Лекарства</option>
+      </select>
+      <label>Наименование назначения</label>
+      <input type="text" id="f-name" placeholder="Поиск..." />
+      <label>Статус</label>
+      <select id="f-status">
+        <option value="">Все</option>
+        <option>Назначено</option>
+        <option>Выполнено</option>
+        <option>Отменено</option>
+      </select>
+    </div>
+
+    <!-- Сетка -->
+    <div class="assign-grid-wrap">
+      <table class="assign-grid" id="assign-grid">
+        <thead id="grid-head">
           <tr>
-            <th style="width: 220px;">Процедура</th>
-            <th style="width: 80px;">Время</th>
-            <!-- 9 колонок с датами добавляются JS -->
+            <th style="min-width:220px;text-align:left;padding-left:10px;">Назначение</th>
+            <th style="min-width:80px;text-align:left;">Исполнитель</th>
+            <!-- date columns added by JS -->
           </tr>
         </thead>
-        <tbody id="assignmentTableBody">
+        <tbody id="grid-body">
           <tr>
-            <td colspan="11" class="text-center text-muted" style="padding: 40px;">
-              <em>Расписание ещё не сформировано. Нажмите «Сгенерировать расписание» или скажите агенту:</em><br>
-              <strong>«Сформируй расписание процедур на 9 дней»</strong>
+            <td colspan="11" class="text-center text-muted" style="padding:40px;">
+              <em>Расписание ещё не сформировано. Нажмите «Сгенерировать расписание (AI)» или выберите шаблон через «+»</em>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+
   </div>
 
-  <div class="text-muted" style="font-size: 11px; text-align: center; padding: 10px;">
-    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
+  <!-- Журнал выполнения -->
+  <div class="dmed-panel" id="completion-log-panel" style="display:none;">
+    <div class="dmed-panel-heading">
+      <h3>Журнал выполнения — <span id="completion-date"></span></h3>
+      <small class="text-muted">Таймстампы фиксируются автоматически</small>
+    </div>
+    <div class="dmed-panel-body">
+      <ul id="completion-log" style="list-style:none;padding:0;margin:0;font-size:13px;"></ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ МОДАЛКА ПРЕВЬЮ РАСПИСАНИЯ ═══ -->
+<div class="modal-overlay" id="modal-schedule-preview">
+  <div class="modal-box" style="width:660px;max-height:88vh;display:flex;flex-direction:column;">
+    <div class="modal-head" style="background:#0a6e52;">
+      ✨ Сгенерированное расписание (AI)
+      <span id="preview-status-badge" style="margin-left:auto;font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;"></span>
+    </div>
+    <div id="preview-loading" style="padding:40px;text-align:center;color:#666;">
+      <div style="font-size:28px;margin-bottom:12px;">⏳</div>
+      <div>Решатель OR-Tools генерирует расписание…</div>
+      <div style="font-size:11px;color:#999;margin-top:6px;">Обычно занимает 5–10 секунд</div>
+    </div>
+    <div id="preview-content" style="overflow-y:auto;flex:1;display:none;">
+      <div id="preview-stats" style="display:flex;gap:20px;padding:10px 16px;background:#f0f7f0;border-bottom:1px solid #c8e6c9;font-size:12px;"></div>
+      <div id="preview-days" style="padding:14px 16px;"></div>
+    </div>
+    <div id="preview-error" style="padding:30px;text-align:center;color:#c0392b;display:none;">
+      <div style="font-size:24px;margin-bottom:8px;">⚠️</div>
+      <div id="preview-error-msg"></div>
+      <div style="font-size:11px;color:#999;margin-top:8px;">Убедитесь что запущен сервер: uvicorn main:app --port 8001</div>
+    </div>
+    <div class="modal-actions" id="preview-actions" style="display:none;">
+      <span id="preview-days-note" style="font-size:11px;color:#888;align-self:center;"></span>
+      <button class="btn-modal-cancel" id="preview-cancel">Отмена</button>
+      <button class="btn-modal-ok" id="preview-confirm">Применить расписание</button>
+    </div>
   </div>
 </div>
 
+<!-- ═══ МОДАЛКА ШАБЛОНЫ ═══ -->
+<div class="modal-overlay" id="modal-tpl">
+  <div class="modal-box">
+    <div class="modal-head">
+      Шаблоны
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" data-tab="user">Пользовательские шаблоны</div>
+      <div class="modal-tab" data-tab="system">Системные шаблоны</div>
+    </div>
+    <div class="modal-subtabs">
+      <div class="modal-subtab" data-sub="org">Организация</div>
+      <div class="modal-subtab" data-sub="dept">Отделение</div>
+      <div class="modal-subtab active" data-sub="user">Пользователь</div>
+    </div>
+    <div class="modal-body">
+      <table class="tpl-table" id="tpl-table">
+        <thead>
+          <tr>
+            <th>Шаблон</th>
+            <th style="width:110px;">Дата</th>
+            <th style="width:36px;"></th>
+          </tr>
+        </thead>
+        <tbody id="tpl-tbody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <div class="pager">
+        <button>◀</button>
+        <button class="active-pg">1</button>
+        <button>▶</button>
+      </div>
+      <span id="tpl-count"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" id="tpl-cancel">Отмена</button>
+      <button class="btn-modal-ok" id="tpl-apply">Применить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ МОДАЛКА ДИЕТА/РЕЖИМ ═══ -->
+<div class="modal-overlay" id="modal-extra">
+  <div class="modal-box" style="width:420px;">
+    <div class="modal-head" id="extra-modal-title">Диета</div>
+    <div class="extra-form">
+      <div class="form-row">
+        <div>
+          <label>Дата начала</label>
+          <input type="date" id="extra-date-start" />
+        </div>
+        <div>
+          <label>Дата окончания</label>
+          <input type="date" id="extra-date-end" />
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label>Наименование</label>
+        <select id="extra-name" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid #c2d1d5;">
+          <option value=""></option>
+        </select>
+      </div>
+      <div>
+        <label>Примечание</label>
+        <textarea id="extra-note" class="form-control" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" id="extra-cancel">Отмена</button>
+      <button class="btn-modal-ok" id="extra-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script src="storage.js"></script>
 <script src="data.js"></script>
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const patientId = params.get('id') || '352';
-  const patient = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
+// ── Params ──
+const params    = new URLSearchParams(window.location.search);
+const patientId = params.get('id') || '352';
+const patient   = window.PATIENTS.find(p => p.id === patientId) || window.PATIENTS[0];
 
-  document.getElementById('patient-name').textContent = patient.fullName;
-  document.getElementById('patient-id').textContent = patient.id;
-  document.getElementById('patient-admission').textContent = patient.admissionDate;
-  document.getElementById('patient-diagnosis').textContent = patient.admissionDiagnosisMain;
-  document.getElementById('back-to-patient').href = 'patient.html?id=' + patient.id;
-  document.title = 'Назначения - ' + patient.fullName;
+// ── Header ──
+document.getElementById('patient-name').textContent       = patient.fullName;
+document.getElementById('patient-id').textContent         = patient.id;
+document.getElementById('patient-admission').textContent  = patient.admissionDate;
+document.getElementById('patient-diagnosis').textContent  = patient.admissionDiagnosisMain;
+document.getElementById('back-to-patient').href           = 'patient.html?id=' + patient.id;
+document.title = 'Назначения — ' + patient.fullName;
 
-  // Генерация дат: 9 рабочих дней начиная с даты поступления (пропускаем воскресенья)
-  function generateWorkingDays(startStr, count) {
-    const [dd, mm, yyyy] = startStr.split('.').map(Number);
-    const days = [];
-    let d = new Date(yyyy, mm - 1, dd);
-    while (days.length < count) {
-      if (d.getDay() !== 0) { // пропускаем воскресенья
-        days.push(new Date(d));
-      }
-      d.setDate(d.getDate() + 1);
-    }
-    return days;
+// Tabs
+['tab-main','tab-medical','tab-diagnoses','tab-assignments','tab-diary'].forEach(id => {
+  const a = document.getElementById(id);
+  if (a && !a.href.includes('#')) {
+    const u = new URL(a.href, location.href);
+    u.searchParams.set('id', patientId);
+    a.href = u.toString();
   }
+});
 
-  // Рендер расписания
-  function renderSchedule(schedule) {
-    const head = document.getElementById('schedule-head').querySelector('tr');
-    const body = document.getElementById('assignmentTableBody');
-    head.innerHTML = '<th style="width: 220px;">Процедура</th><th style="width: 80px;">Время</th>';
-    body.innerHTML = '';
+// ── Dates ──
+function parseAdmissionDate(str) {
+  const [dd, mm, yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm - 1, dd);
+}
 
-    const days = generateWorkingDays(patient.admissionDate, 9);
-    days.forEach((d, i) => {
-      const dateStr = d.toLocaleDateString('ru', { day: '2-digit', month: '2-digit' });
-      const th = document.createElement('th');
-      th.className = 'text-center';
-      th.innerHTML = `День ${i + 1}<br><small>${dateStr}</small>`;
-      head.appendChild(th);
-    });
-
-    schedule.forEach((row) => {
-      const proc = window.PROCEDURES[row.code];
-      if (!proc) return;
-      const tr = document.createElement('tr');
-      tr.setAttribute('data-procedure-code', row.code);
-      tr.innerHTML = `
-        <td>
-          <strong>${proc.name}</strong>
-          <br><small class="text-muted">${proc.specialist} | ${proc.room}</small>
-        </td>
-        <td class="text-center"><strong>${proc.slot}</strong></td>
-      `;
-      row.days.forEach((status, dayIdx) => {
-        const td = document.createElement('td');
-        td.className = 'text-center';
-        td.setAttribute('data-day', dayIdx);
-        if (status === 'done') {
-          td.classList.add('bg-success');
-          td.innerHTML = '<span class="icon-check"></span>';
-        } else if (status === 'scheduled') {
-          td.classList.add('bg-warning');
-          td.innerHTML = `<button class="btn btn-success btn-xs" data-action="complete" data-code="${row.code}" data-day="${dayIdx}">✓</button>`;
-        } else {
-          td.innerHTML = '—';
-        }
-        tr.appendChild(td);
-      });
-      body.appendChild(tr);
-    });
-
-    document.getElementById('schedule-info').innerHTML =
-      `<span class="icon-check"></span> Сформировано процедур: <strong>${schedule.length}</strong> × 9 дней = <strong>${schedule.length * 9}</strong> сеансов`;
+function generateWorkingDays(startDate, count) {
+  const days = [];
+  let d = new Date(startDate);
+  while (days.length < count) {
+    if (d.getDay() !== 0) days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
   }
+  return days;
+}
 
-  // Клик "Выполнить"
-  document.addEventListener('click', (e) => {
-    if (e.target.matches('[data-action="complete"]')) {
-      const td = e.target.closest('td');
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-      td.classList.remove('bg-warning');
-      td.classList.add('bg-success');
-      td.innerHTML = `<span class="icon-check" title="Выполнено ${timeStr}"></span><br><small>${timeStr}</small>`;
-      td.classList.add('ai-filled-animation');
-    }
+let currentStart = parseAdmissionDate(patient.admissionDate);
+document.getElementById('start-date').value = currentStart.toISOString().slice(0, 10);
+
+document.getElementById('btn-prev-date').addEventListener('click', () => {
+  currentStart.setDate(currentStart.getDate() - 9);
+  document.getElementById('start-date').value = currentStart.toISOString().slice(0, 10);
+  refreshGrid();
+});
+document.getElementById('btn-next-date').addEventListener('click', () => {
+  currentStart.setDate(currentStart.getDate() + 9);
+  document.getElementById('start-date').value = currentStart.toISOString().slice(0, 10);
+  refreshGrid();
+});
+document.getElementById('start-date').addEventListener('change', (e) => {
+  currentStart = new Date(e.target.value);
+  refreshGrid();
+});
+
+// ── Extra rows (diet/mode) ──
+let extraRows = JSON.parse(localStorage.getItem('dmed_extra_' + patientId) || '[]');
+
+// ── Grid rendering ──
+function refreshGrid() {
+  const saved = window.DmedStorage.getSchedule(patientId);
+  if (saved && saved.length) renderGrid(saved, false);
+}
+
+function renderGrid(schedule, persist = true) {
+  if (persist) window.DmedStorage.saveSchedule(patientId, schedule);
+
+  const days = generateWorkingDays(currentStart, 9);
+  const head = document.getElementById('grid-head').querySelector('tr');
+  const body = document.getElementById('grid-body');
+
+  // Build header
+  head.innerHTML = `
+    <th style="min-width:220px;text-align:left;padding-left:10px;">Назначение</th>
+    <th style="min-width:80px;text-align:left;padding-left:8px;">Исполнитель</th>
+  `;
+  days.forEach((d, i) => {
+    const label = d.toLocaleDateString('ru', { day: 'numeric', month: 'short' }).replace('.', '');
+    const th = document.createElement('th');
+    th.innerHTML = `${label}`;
+    head.appendChild(th);
   });
 
-  // Кнопка "Сгенерировать" вручную - использует алгоритм из агента если он есть,
-  // иначе дефолтный набор из PROCEDURE_SETS
-  document.getElementById('btn-generate-schedule').addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('dmed-request-schedule', { detail: { patientId: patient.id } }));
-    // Fallback на случай если агент не отвечает
-    setTimeout(() => {
-      if (document.querySelectorAll('#assignmentTableBody tr[data-procedure-code]').length === 0) {
-        defaultSchedule();
+  body.innerHTML = '';
+
+  // Filter
+  const fType   = document.getElementById('f-type').value;
+  const fName   = document.getElementById('f-name').value.toLowerCase();
+  const fStatus = document.getElementById('f-status').value;
+
+  // Procedure rows
+  schedule.forEach(row => {
+    const proc = window.PROCEDURES[row.code];
+    if (!proc) return;
+    if (fType && fType !== 'Процедура') return;
+    if (fName && !proc.name.toLowerCase().includes(fName)) return;
+
+    // "Врач" sub-row
+    const trDoc = document.createElement('tr');
+    trDoc.setAttribute('data-proc-code', row.code);
+    trDoc.setAttribute('data-role', 'doctor');
+
+    const tdName = document.createElement('td');
+    tdName.className = 'proc-cell';
+    tdName.rowSpan = 2;
+    tdName.innerHTML = `${proc.name}<div style="font-weight:400;font-size:11px;color:var(--dmed-muted);margin-top:2px;">${proc.specialist} · ${proc.room}</div>`;
+
+    const tdRoleDoc = document.createElement('td');
+    tdRoleDoc.className = 'role-cell';
+    tdRoleDoc.textContent = 'Врач';
+
+    trDoc.appendChild(tdName);
+    trDoc.appendChild(tdRoleDoc);
+
+    // "Медсестра" sub-row
+    const trNurse = document.createElement('tr');
+    trNurse.setAttribute('data-proc-code', row.code);
+    trNurse.setAttribute('data-role', 'nurse');
+
+    const tdRoleNurse = document.createElement('td');
+    tdRoleNurse.className = 'role-cell';
+    tdRoleNurse.textContent = 'Медсестра';
+    trNurse.appendChild(tdRoleNurse);
+
+    // Day cells
+    days.forEach((d, dayIdx) => {
+      const cell   = row.days[dayIdx];
+      const status = getCellStatus(cell);
+      const time   = getCellTime(cell);
+
+      if (fStatus === 'Выполнено' && status !== 'done') return;
+      if (fStatus === 'Назначено' && status !== 'scheduled') return;
+
+      // Doctor cell
+      const tdDoc = document.createElement('td');
+      tdDoc.className = 'day-cell ' + (status === 'done' ? 'done' : status === 'scheduled' ? 'sched' : 'empty');
+      tdDoc.setAttribute('data-day', dayIdx);
+      tdDoc.setAttribute('data-code', row.code);
+      if (status === 'done') {
+        tdDoc.innerHTML = `<span class="cnt">${time ? '✓' + time : '✓'}</span>`;
+        tdDoc.title = 'Выполнено' + (time ? ' в ' + time : '');
+      } else if (status === 'scheduled') {
+        tdDoc.innerHTML = `<span class="cnt">${time || '—'}</span>`;
+        tdDoc.title = (time ? time + ' — ' : '') + 'Нажмите чтобы отметить выполненным';
+        tdDoc.addEventListener('click', () => markDone(row.code, dayIdx, tdDoc, time));
+      } else {
+        tdDoc.innerHTML = `<span class="cnt" style="color:#ccc;">—</span>`;
       }
-    }, 500);
+      trDoc.appendChild(tdDoc);
+
+      // Nurse cell
+      const tdNurse = document.createElement('td');
+      tdNurse.className = 'day-cell ' + (status === 'done' ? 'done' : status === 'scheduled' ? 'sched' : 'empty');
+      if (status === 'done') {
+        tdNurse.innerHTML = `<span class="cnt">1</span>`;
+      } else if (status === 'scheduled') {
+        tdNurse.innerHTML = `<span class="cnt" style="color:#b87800;">0</span>`;
+      } else {
+        tdNurse.innerHTML = `<span class="cnt" style="color:#ccc;">—</span>`;
+      }
+      trNurse.appendChild(tdNurse);
+    });
+
+    body.appendChild(trDoc);
+    body.appendChild(trNurse);
   });
 
-  function defaultSchedule() {
-    const procSet = window.PROCEDURE_SETS[patient.diagnosisCategory] || [];
-    const schedule = procSet.map(code => ({
+  // Extra rows (diet/режим)
+  extraRows.forEach(ex => {
+    if (fType && fType !== ex.type) return;
+    if (fName && !ex.name.toLowerCase().includes(fName)) return;
+
+    const tr = document.createElement('tr');
+    tr.className = 'extra-row';
+
+    const tdName = document.createElement('td');
+    tdName.className = 'proc-cell';
+    tdName.colSpan = 2;
+    tdName.innerHTML = `<span style="color:var(--dmed-primary);font-weight:600;">${ex.type}:</span> ${ex.name}
+      <span style="font-size:10px;color:var(--dmed-muted);margin-left:8px;">${ex.dateStart} — ${ex.dateEnd}</span>`;
+    tr.appendChild(tdName);
+
+    days.forEach(() => {
+      const td = document.createElement('td');
+      td.className = 'day-cell done';
+      td.innerHTML = '<span class="cnt">1</span>';
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+
+  document.getElementById('schedule-info') && (document.getElementById('schedule-info').textContent = '');
+}
+
+function markDone(code, dayIdx, tdEl, schedTime) {
+  const now = new Date();
+  const doneTime = schedTime || now.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+
+  tdEl.className = 'day-cell done';
+  tdEl.innerHTML = `<span class="cnt">✓${doneTime}</span>`;
+  tdEl.title = 'Выполнено в ' + doneTime;
+
+  window.DmedStorage.patchScheduleCell(patientId, code, dayIdx, 'done');
+
+  const dateStr = now.toLocaleDateString('ru', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const procName = window.PROCEDURES[code]?.name || code;
+  addToLog(procName, doneTime, dateStr);
+
+  // Mirror nurse cell
+  const nurseRow = document.querySelector(`tr[data-proc-code="${code}"][data-role="nurse"]`);
+  if (nurseRow) {
+    const nCells = nurseRow.querySelectorAll('.day-cell');
+    const nIdx = dayIdx + 1; // +1 because nurse row has no rowspan cell
+    if (nCells[nIdx - 1]) {
+      nCells[nIdx - 1].className = 'day-cell done';
+      nCells[nIdx - 1].innerHTML = '<span class="cnt">1</span>';
+    }
+  }
+}
+
+function addToLog(procName, timeStr, dateStr) {
+  const panel = document.getElementById('completion-log-panel');
+  const log = document.getElementById('completion-log');
+  document.getElementById('completion-date').textContent = dateStr;
+  panel.style.display = '';
+  const li = document.createElement('li');
+  li.style.cssText = 'padding:6px 0;border-bottom:1px solid var(--dmed-border);display:flex;gap:12px;align-items:center;';
+  li.innerHTML = `<span style="color:var(--dmed-success);font-weight:700;min-width:50px;">${timeStr}</span>
+    <span>${procName}</span>
+    <span style="color:var(--dmed-muted);font-size:11px;">Выполнен — осложнений нет</span>`;
+  log.appendChild(li);
+}
+
+// ── Load on init ──
+// Clear old string-format schedules (they lack time info)
+const _saved = window.DmedStorage.getSchedule(patientId);
+const _isNewFormat = _saved && _saved.length &&
+  _saved[0].days.some(d => d && typeof d === 'object' && 'time' in d);
+if (_saved && _saved.length && _isNewFormat) {
+  renderGrid(_saved, false);
+} else if (_saved && _saved.length) {
+  // Old format — convert to new with null times
+  const migrated = _saved.map(row => ({
+    code: row.code,
+    days: (row.days || []).map(s => s && s !== 'empty' ? { status: s, time: null } : null),
+  }));
+  renderGrid(migrated, false);
+}
+
+// Filters
+['f-type','f-name','f-status'].forEach(id => {
+  document.getElementById(id).addEventListener(id === 'f-name' ? 'input' : 'change', () => {
+    const s = window.DmedStorage.getSchedule(patientId);
+    if (s) renderGrid(s, false);
+  });
+});
+
+// ── OR-Tools Schedule Generator ──────────────────────────────────────────────
+
+const SCHEDULER_URL = 'http://localhost:8001/api/schedule';
+
+// Map specialist name strings (from data.js) → OR-Tools type
+const SPEC_NAME_TO_TYPE = {
+  'Кунакбаева Ж.Ж.': 'massager',
+  'Психолог':         'psychologist',
+  'Логопед':          'speech',
+  'Таңатар К.':       'lfc',
+  'Жанзакова С.А.':   'lfc',
+  'Тапиева М.М.':     'physio',
+  'Айдарханова Г.А.': 'physio',
+  'Эрготерапевт':     'ergo',
+  'Эрготерапевт ':    'ergo',
+};
+
+const SPECIALISTS_ROSTER = [
+  { id: 'massager',     name: 'Кунакбаева Ж.Ж.',  type: 'massager',     role: 'Массажист' },
+  { id: 'psychologist', name: 'Психолог',           type: 'psychologist', role: 'Психолог' },
+  { id: 'speech',       name: 'Логопед',            type: 'speech',       role: 'Логопед' },
+  { id: 'lfc',          name: 'Таңатар К.',         type: 'lfc',          role: 'Инструктор ЛФК' },
+  { id: 'physio',       name: 'Тапиева М.М.',       type: 'physio',       role: 'Физиотерапевт' },
+  { id: 'ergo',         name: 'Эрготерапевт',       type: 'ergo',         role: 'Эрготерапевт' },
+];
+
+// Spread N sessions evenly across totalDays (0-based day indices)
+function spreadDays(totalDays, sessions) {
+  const n = Math.min(sessions, totalDays);
+  if (n >= totalDays) return Array.from({ length: totalDays }, (_, i) => i);
+  if (n <= 1) return [0];
+  return Array.from({ length: n }, (_, i) => Math.round(i * (totalDays - 1) / (n - 1)));
+}
+
+function buildApiRequest(numDays) {
+  const codes = window.PROCEDURE_SETS[patient.diagnosisCategory] || [];
+  const usedTypes = new Set();
+  const procedures = [];
+
+  codes.forEach(code => {
+    const proc = window.PROCEDURES[code];
+    if (!proc) return;
+    const specType = SPEC_NAME_TO_TYPE[proc.specialist.trim()] || 'physio';
+    usedTypes.add(specType);
+    const sessions = proc.sessions || numDays;
+    procedures.push({
       code,
-      days: Array(9).fill('scheduled').map((_, i) => i < patient.currentDay - 1 ? 'done' : 'scheduled')
-    }));
-    renderSchedule(schedule);
-  }
-
-  // API для агента: показать сгенерированное расписание
-  window.addEventListener('dmed-fill-schedule', (e) => {
-    const { schedule } = e.detail || {};
-    if (schedule) renderSchedule(schedule);
+      name:            proc.name,
+      specialist_type: specType,
+      duration_slots:  Math.max(1, Math.ceil(proc.duration / 30)),
+      days:            spreadDays(numDays, sessions),
+    });
   });
 
-  window.addEventListener('dmed-mark-done', (e) => {
-    const { code, day } = e.detail || {};
-    const td = document.querySelector(`tr[data-procedure-code="${code}"] td[data-day="${day}"]`);
-    if (td && td.querySelector('[data-action="complete"]')) {
-      td.querySelector('[data-action="complete"]').click();
+  return {
+    patients:    [{ id: patient.id, name: patient.fullName, procedures }],
+    specialists: SPECIALISTS_ROSTER.filter(s => usedTypes.has(s.type)),
+    num_days:    numDays,
+    timeout_sec: 10,
+  };
+}
+
+// Cell helpers — handle both old string format and new {status, time} format
+function getCellStatus(cell) {
+  if (!cell || cell === 'empty') return 'empty';
+  if (typeof cell === 'string') return cell;
+  return cell.status || 'empty';
+}
+function getCellTime(cell) {
+  if (!cell || typeof cell === 'string') return null;
+  return cell.time || null;
+}
+
+function convertApiToGrid(apiSchedule, numDays) {
+  const byCode = {};
+  const doneUntil = patient.currentDay - 1;
+
+  apiSchedule.forEach(entry => {
+    if (!byCode[entry.procedure_code]) {
+      byCode[entry.procedure_code] = {
+        code: entry.procedure_code,
+        days: Array(numDays).fill(null),
+      };
+    }
+    const di = entry.day - 1;
+    if (di >= 0 && di < numDays) {
+      byCode[entry.procedure_code].days[di] = {
+        status: di < doneUntil ? 'done' : 'scheduled',
+        time:   entry.time,
+      };
     }
   });
+
+  return Object.values(byCode);
+}
+
+let _lastApiSchedule = null;  // raw API response kept for confirm
+
+function showSchedulePreview() {
+  const modal = document.getElementById('modal-schedule-preview');
+  document.getElementById('preview-loading').style.display = '';
+  document.getElementById('preview-content').style.display  = 'none';
+  document.getElementById('preview-error').style.display   = 'none';
+  document.getElementById('preview-actions').style.display  = 'none';
+  document.getElementById('preview-status-badge').textContent = '';
+  _lastApiSchedule = null;
+  modal.classList.add('open');
+
+  const NUM_DAYS = 14;
+  const reqBody  = buildApiRequest(NUM_DAYS);
+
+  fetch(SCHEDULER_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(reqBody),
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(data => {
+    document.getElementById('preview-loading').style.display = 'none';
+
+    if (data.status !== 'ok' || !data.schedule?.length) {
+      document.getElementById('preview-error-msg').textContent =
+        'Решатель не нашёл допустимое расписание (' + (data.status || 'пусто') + ').';
+      document.getElementById('preview-error').style.display = '';
+      return;
+    }
+
+    _lastApiSchedule = data;
+    document.getElementById('preview-status-badge').textContent =
+      data.stats?.total_tasks + ' процедур';
+
+    // Stats bar
+    const stats = document.getElementById('preview-stats');
+    const load  = data.stats?.specialist_load || {};
+    stats.innerHTML =
+      `<strong>Итого процедур:</strong> ${data.stats?.total_tasks}` +
+      Object.entries(load).map(([k,v]) =>
+        `<span style="color:#555;">· ${k}: <strong>${v}</strong></span>`
+      ).join('');
+
+    // Day-by-day preview (first 5 days)
+    const admDate = parseAdmissionDate(patient.admissionDate);
+    const byDay = {};
+    data.schedule.forEach(e => { (byDay[e.day] = byDay[e.day] || []).push(e); });
+    const dayNums = Object.keys(byDay).map(Number).sort((a,b)=>a-b);
+    const previewDays = dayNums.slice(0, 5);
+
+    const container = document.getElementById('preview-days');
+    container.innerHTML = '';
+    previewDays.forEach(dn => {
+      const d = new Date(admDate); d.setDate(d.getDate() + dn - 1);
+      const label = d.toLocaleDateString('ru', { weekday:'short', day:'numeric', month:'short' });
+      const section = document.createElement('div');
+      section.style.cssText = 'margin-bottom:14px;';
+      section.innerHTML = `<div style="font-weight:700;font-size:12px;color:#0a6e52;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e0f0e8;">День ${dn} — ${label}</div>`;
+      const rows = byDay[dn].slice().sort((a,b) => a.slot - b.slot);
+      rows.forEach(e => {
+        const dur = e.duration_slots * 30;
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:10px;font-size:12px;padding:3px 0;color:#333;';
+        row.innerHTML =
+          `<span style="min-width:42px;font-weight:700;color:#1a6b7c;">${e.time}</span>` +
+          `<span style="flex:1;">${e.procedure_name}</span>` +
+          `<span style="min-width:16px;color:#999;">${dur} мин</span>` +
+          `<span style="color:#555;min-width:120px;">→ ${e.specialist_name}</span>`;
+        section.appendChild(row);
+      });
+      container.appendChild(section);
+    });
+
+    const rest = dayNums.length - previewDays.length;
+    document.getElementById('preview-days-note').textContent =
+      rest > 0 ? `+ ещё ${rest} дней в расписании` : `Все ${dayNums.length} дней`;
+
+    document.getElementById('preview-content').style.display = '';
+    document.getElementById('preview-actions').style.display = '';
+  })
+  .catch(err => {
+    document.getElementById('preview-loading').style.display = 'none';
+    document.getElementById('preview-error-msg').textContent = 'Ошибка соединения: ' + err.message;
+    document.getElementById('preview-error').style.display = '';
+  });
+}
+
+// ── Generate button ──
+document.getElementById('btn-generate-schedule').addEventListener('click', () => {
+  showSchedulePreview();
+});
+
+// Preview modal actions
+document.getElementById('preview-cancel').addEventListener('click', () => {
+  document.getElementById('modal-schedule-preview').classList.remove('open');
+});
+document.getElementById('modal-schedule-preview').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-schedule-preview'))
+    document.getElementById('modal-schedule-preview').classList.remove('open');
+});
+document.getElementById('preview-confirm').addEventListener('click', () => {
+  if (!_lastApiSchedule) return;
+  document.getElementById('modal-schedule-preview').classList.remove('open');
+  const grid = convertApiToGrid(_lastApiSchedule.schedule, 14);
+  renderGrid(grid);
+});
+
+function defaultSchedule() {
+  const procSet = window.PROCEDURE_SETS[patient.diagnosisCategory] || [];
+  const NUM_DAYS = 14;
+  const doneUntil = patient.currentDay - 1;
+  const schedule = procSet.map(code => {
+    const proc = window.PROCEDURES[code];
+    const sessions = proc?.sessions || NUM_DAYS;
+    const days = Array(NUM_DAYS).fill(null);
+    spreadDays(NUM_DAYS, sessions).forEach(di => {
+      days[di] = { status: di < doneUntil ? 'done' : 'scheduled', time: proc?.slot || null };
+    });
+    return { code, days };
+  });
+  renderGrid(schedule);
+}
+
+// Voice: add a procedure row dynamically
+window.addProcedureVoice = function(code, name, sessions) {
+  const NUM_DAYS = 14;
+  let saved = window.DmedStorage.getSchedule(patientId) || [];
+  if (saved.find(r => r.code === code)) return;
+  if (!window.PROCEDURES[code]) {
+    window.PROCEDURES[code] = { name, specialist: name, sessions: sessions || 10, category: 'speech', role: 'specialist' };
+  }
+  const n = sessions || window.PROCEDURES[code]?.sessions || 10;
+  const days = spreadDays(NUM_DAYS, n).reduce((arr, idx) => {
+    arr[idx] = { status: 'scheduled', time: null };
+    return arr;
+  }, Array(NUM_DAYS).fill(null));
+  saved = [{ code, days }, ...saved];
+  renderGrid(saved);
+};
+
+// Handle voice_add URL param
+(function handleVoiceAdd() {
+  const vp = new URLSearchParams(window.location.search);
+  if (vp.get('voice_add') !== '1') return;
+  const code = vp.get('code'), pname = vp.get('pname'), sessions = parseInt(vp.get('sessions')) || 10;
+  if (code || pname) setTimeout(() => window.addProcedureVoice(code || pname, pname || code, sessions), 400);
+})();
+
+// Agent events
+window.addEventListener('dmed-fill-schedule', e => { if (e.detail?.schedule) renderGrid(e.detail.schedule); });
+window.addEventListener('dmed-add-procedure', e => {
+  const { code, name, sessions } = e.detail || {};
+  if (code || name) window.addProcedureVoice(code || name, name || code, sessions);
+});
+window.addEventListener('dmed-mark-done', e => {
+  const { code, day } = e.detail || {};
+  const td = document.querySelector(`tr[data-proc-code="${code}"][data-role="doctor"] td[data-day="${day}"]`);
+  if (td) markDone(code, day, td);
+});
+
+// ══════════════════════════════════════════
+// ШАБЛОНЫ MODAL
+// ══════════════════════════════════════════
+const TEMPLATES = [
+  { name: 'лист назначений',      date: '06.10.2025', category: 'respiratory' },
+  { name: 'лист назначений мой',  date: '14.10.2025', category: 'respiratory' },
+  { name: 'Назначением',          date: '10.10.2025', category: 'neurological' },
+  { name: 'неврологие',           date: '06.10.2025', category: 'neurological' },
+  { name: 'полный',               date: '07.10.2025', category: 'neurological' },
+];
+
+let selectedTpl = null;
+const modalTpl = document.getElementById('modal-tpl');
+
+function openTplModal() {
+  selectedTpl = null;
+  renderTplTable('user');
+  modalTpl.classList.add('open');
+}
+function closeTplModal() { modalTpl.classList.remove('open'); }
+
+document.getElementById('btn-open-tpl').addEventListener('click', openTplModal);
+document.getElementById('tpl-cancel').addEventListener('click', closeTplModal);
+modalTpl.addEventListener('click', e => { if (e.target === modalTpl) closeTplModal(); });
+
+// Tabs
+document.querySelectorAll('.modal-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.modal-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    renderTplTable(t.dataset.tab);
+  });
+});
+document.querySelectorAll('.modal-subtab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.modal-subtab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    renderTplTable(document.querySelector('.modal-tab.active').dataset.tab);
+  });
+});
+
+function renderTplTable(scope) {
+  const tbody = document.getElementById('tpl-tbody');
+  const list = scope === 'system'
+    ? TEMPLATES
+    : TEMPLATES.filter(t => t.category === patient.diagnosisCategory || true);
+  tbody.innerHTML = '';
+  list.forEach((tpl, idx) => {
+    const tr = document.createElement('tr');
+    if (selectedTpl === idx) tr.classList.add('selected');
+    tr.innerHTML = `<td>${tpl.name}</td><td>${tpl.date}</td><td><button class="tpl-edit-btn">✏</button></td>`;
+    tr.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tpl-edit-btn')) return;
+      document.querySelectorAll('#tpl-tbody tr').forEach(r => r.classList.remove('selected'));
+      tr.classList.add('selected');
+      selectedTpl = idx;
+    });
+    tbody.appendChild(tr);
+  });
+  document.getElementById('tpl-count').textContent = `Записей: ${list.length}`;
+}
+
+document.getElementById('tpl-apply').addEventListener('click', () => {
+  if (selectedTpl === null) { alert('Выберите шаблон'); return; }
+  closeTplModal();
+  defaultSchedule();
+});
+
+// ══════════════════════════════════════════
+// ДИЕТА / РЕЖИМ MODAL
+// ══════════════════════════════════════════
+const EXTRA_OPTIONS = {
+  diet: { title: 'Диета', options: ['Стол №1 (язвенная болезнь)', 'Стол №5 (печень)', 'Стол №10 (сердце)', 'Стол №15 (общий)', 'Безглютеновая', 'Гипоаллергенная'] },
+  mode: { title: 'Режим', options: ['Постельный', 'Полупостельный', 'Палатный', 'Свободный', 'Тренирующий'] },
+  drug: { title: 'Лекарства', options: ['Аскорбиновая кислота', 'Магний треонат', 'Витамины группы B', 'Лецитин', 'Элькар'] },
+};
+
+const modalExtra = document.getElementById('modal-extra');
+let currentExtraType = 'diet';
+
+document.getElementById('btn-extra').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('extra-dropdown').classList.toggle('open');
+});
+document.addEventListener('click', () => document.getElementById('extra-dropdown').classList.remove('open'));
+
+document.getElementById('extra-dropdown').addEventListener('click', e => {
+  const item = e.target.closest('.dropdown-item');
+  if (!item) return;
+  currentExtraType = item.dataset.extra;
+  const cfg = EXTRA_OPTIONS[currentExtraType];
+  document.getElementById('extra-modal-title').textContent = cfg.title;
+  const sel = document.getElementById('extra-name');
+  sel.innerHTML = '<option value=""></option>' + cfg.options.map(o => `<option>${o}</option>`).join('');
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('extra-date-start').value = today;
+  const end = new Date(); end.setDate(end.getDate() + 9);
+  document.getElementById('extra-date-end').value = end.toISOString().slice(0, 10);
+  document.getElementById('extra-note').value = '';
+  modalExtra.classList.add('open');
+  document.getElementById('extra-dropdown').classList.remove('open');
+  e.stopPropagation();
+});
+
+document.getElementById('extra-cancel').addEventListener('click', () => modalExtra.classList.remove('open'));
+modalExtra.addEventListener('click', e => { if (e.target === modalExtra) modalExtra.classList.remove('open'); });
+
+document.getElementById('extra-save').addEventListener('click', () => {
+  const name = document.getElementById('extra-name').value;
+  if (!name) { alert('Выберите наименование'); return; }
+  const cfg = EXTRA_OPTIONS[currentExtraType];
+  const startRaw = document.getElementById('extra-date-start').value;
+  const endRaw   = document.getElementById('extra-date-end').value;
+  const fmt = v => new Date(v).toLocaleDateString('ru', {day:'2-digit',month:'2-digit',year:'numeric'});
+  extraRows.push({ type: cfg.title, name, dateStart: fmt(startRaw), dateEnd: fmt(endRaw) });
+  localStorage.setItem('dmed_extra_' + patientId, JSON.stringify(extraRows));
+  modalExtra.classList.remove('open');
+  const s = window.DmedStorage.getSchedule(patientId);
+  if (s) renderGrid(s, false); else {
+    defaultSchedule();
+  }
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Вход - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--dmed-bg);
+  }
+
+  .login-wrap {
+    width: 480px;
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .login-logo .logo-text {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dmed-primary);
+  }
+  .login-logo .logo-sub {
+    font-size: 13px;
+    color: var(--dmed-muted);
+    margin-top: 4px;
+  }
+
+  .role-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .role-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    background: var(--dmed-surface);
+    border: 2px solid var(--dmed-border);
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--dmed-text);
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    gap: 12px;
+  }
+  .role-card:hover {
+    border-color: var(--dmed-primary);
+    background: var(--dmed-primary-soft);
+    box-shadow: 0 4px 16px rgba(10,110,82,0.12);
+    text-decoration: none;
+    color: var(--dmed-text);
+  }
+  .role-card .role-icon {
+    font-size: 40px;
+    line-height: 1;
+  }
+  .role-card .role-title {
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .role-card .role-desc {
+    font-size: 12px;
+    color: var(--dmed-muted);
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  /* Specialist sub-panel */
+  .specialist-panel {
+    display: none;
+    background: var(--dmed-surface);
+    border: 1px solid var(--dmed-border);
+    padding: 20px;
+    margin-top: -8px;
+  }
+  .specialist-panel.open { display: block; }
+  .specialist-panel h4 {
+    margin: 0 0 14px 0;
+    font-size: 13px;
+    color: var(--dmed-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .spec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .spec-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--dmed-surface-alt);
+    border: 1px solid var(--dmed-border);
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--dmed-text);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  .spec-btn:hover {
+    background: var(--dmed-primary-soft);
+    border-color: var(--dmed-primary);
+    text-decoration: none;
+    color: var(--dmed-text);
+  }
+  .spec-btn .spec-icon { font-size: 20px; }
+  .spec-btn .spec-info small {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--dmed-muted);
+    margin-top: 2px;
+  }
+
+  .login-footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--dmed-muted);
+    margin-top: 20px;
+  }
+
+  /* Форма входа */
+  .login-form-box {
+    background: var(--dmed-surface);
+    border: 1px solid var(--dmed-border);
+    padding: 28px 28px 24px;
+    margin-bottom: 24px;
+  }
+  .login-form-box .form-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dmed-text);
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--dmed-border);
+  }
+  .login-form-box .form-group {
+    margin-bottom: 14px;
+  }
+  .login-form-box label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dmed-muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .login-form-box .form-control {
+    width: 100%;
+    padding: 8px 11px;
+    font-size: 13px;
+    border: 1px solid #c2d1d5;
+    background: var(--dmed-surface);
+    color: var(--dmed-text);
+    font-family: inherit;
+  }
+  .login-form-box .form-control:focus {
+    border-color: var(--dmed-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--dmed-primary-ring);
+  }
+  .login-form-box .btn-login {
+    width: 100%;
+    padding: 9px;
+    background: var(--dmed-primary);
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .login-form-box .btn-login:hover { background: #0a5a42; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--dmed-muted);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--dmed-border);
+  }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <div class="login-logo">
+    <div class="logo-text">⚕ Dmed.Стационар</div>
+    <div class="logo-sub">Реабилитационный центр «Акбобек» · МОКАП AIS Hack 3.0</div>
+  </div>
+
+  <!-- Форма входа -->
+  <div class="login-form-box">
+    <div class="form-title">Вход в систему</div>
+    <div class="form-group">
+      <label>Логин (ИИН)</label>
+      <input type="text" class="form-control" id="f-login" placeholder="Введите ИИН" value="admin" />
+    </div>
+    <div class="form-group">
+      <label>Пароль</label>
+      <input type="password" class="form-control" id="f-pass" placeholder="••••••••" value="admin" />
+    </div>
+    <button class="btn-login" id="btn-login">Войти</button>
+  </div>
+
+  <!-- Разделитель -->
+  <div class="divider">или выберите роль напрямую</div>
+
+  <div class="role-cards">
+    <a class="role-card" href="index.html">
+      <div class="role-icon">🩺</div>
+      <div class="role-title">Лечащий врач</div>
+      <div class="role-desc">Карты пациентов, медицинские записи, назначения</div>
+    </a>
+    <div class="role-card" id="btn-specialist">
+      <div class="role-icon">👐</div>
+      <div class="role-title">Специалист</div>
+      <div class="role-desc">Массажист, психолог, ЛФК — очередь и выполнение процедур</div>
+    </div>
+  </div>
+
+  <div class="specialist-panel" id="specialist-panel">
+    <h4>Выберите специалиста</h4>
+    <div class="spec-list">
+      <a class="spec-btn" href="specialist-queue.html?specialist=massager">
+        <span class="spec-icon">🤲</span>
+        <span class="spec-info">
+          Массажист
+          <small>Кабинет массажа · Очередь пациентов</small>
+        </span>
+      </a>
+      <a class="spec-btn" href="specialist-queue.html?specialist=psychologist">
+        <span class="spec-icon">🧠</span>
+        <span class="spec-info">
+          Психолог
+          <small>Кабинет психолога · Очередь пациентов</small>
+        </span>
+      </a>
+    </div>
+  </div>
+
+  <div class="login-footer">
+    Dmed.Стационар © 2026 · Версия 1.0.305
+  </div>
+
+</div>
+
+<script>
+  // Кнопка Войти — демо-логины
+  const USERS = {
+    'admin':      { role: 'doctor',       redirect: 'index.html' },
+    'doctor':     { role: 'doctor',       redirect: 'index.html' },
+    'massager':   { role: 'specialist',   redirect: 'specialist-queue.html?specialist=massager' },
+    'psycholog':  { role: 'specialist',   redirect: 'specialist-queue.html?specialist=psychologist' },
+  };
+
+  document.getElementById('btn-login').addEventListener('click', doLogin);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+  function doLogin() {
+    const login = document.getElementById('f-login').value.trim().toLowerCase();
+    const pass  = document.getElementById('f-pass').value;
+    if (!pass) { shake(); return; }
+    const user = USERS[login] || USERS['admin'];
+    window.location.href = user.redirect;
+  }
+
+  function shake() {
+    const box = document.querySelector('.login-form-box');
+    box.style.outline = '2px solid #c4544d';
+    setTimeout(() => box.style.outline = '', 1000);
+  }
+
+  // Кнопка выбора специалиста
+  document.getElementById('btn-specialist').addEventListener('click', () => {
+    const panel = document.getElementById('specialist-panel');
+    panel.classList.toggle('open');
+  });
+</script>
+</body>
+</html>

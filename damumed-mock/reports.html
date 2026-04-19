@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчёты - Dmed.Стационар</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="dmed-navbar">
+  <div class="logo">Dmed.Стационар</div>
+  <ul class="nav-menu">
+    <li><a href="index.html">Мои пациенты</a></li>
+    <li><a href="#" class="active">Отчёты</a></li>
+    <li><a href="directories.html">Справочники</a></li>
+  </ul>
+  <div class="user-info">
+    <div class="name">МАХМУТХАН А.М.</div>
+    <div>Реабилитолог | РЦ «Акбобек»</div>
+  </div>
+</nav>
+
+<div class="dmed-container">
+
+  <div class="dmed-breadcrumb">
+    <a href="index.html">Главная</a>
+    <span class="separator">›</span>
+    <span>Отчёты</span>
+  </div>
+
+  <!-- Сводная статистика -->
+  <div class="row" id="stats-row" style="display:flex; gap:16px; margin-bottom:16px;"></div>
+
+  <!-- Отчёт по пациентам -->
+  <div class="dmed-panel">
+    <div class="dmed-panel-heading">
+      <h3>Отчёт поступлений — <span id="report-period"></span></h3>
+      <small class="text-muted">РЦ «Акбобек», отд. реабилитации</small>
+    </div>
+    <div class="dmed-panel-body" style="padding:0;">
+      <table class="dmed-table" id="report-table">
+        <thead>
+          <tr>
+            <th style="width:60px;">Карта №</th>
+            <th>ФИО пациента</th>
+            <th style="width:90px;">Поступил</th>
+            <th style="width:90px;">Выписан</th>
+            <th style="width:60px;">Дней</th>
+            <th>Диагноз</th>
+            <th style="width:90px;">Исход</th>
+            <th style="width:80px;">Статус</th>
+          </tr>
+        </thead>
+        <tbody id="report-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="text-muted" style="font-size:11px; text-align:center; padding:10px;">
+    Dmed.Стационар © 2026 | МОКАП для AIS Hack 3.0
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+  // Период отчёта
+  const now = new Date();
+  document.getElementById('report-period').textContent =
+    now.toLocaleDateString('ru', { month: 'long', year: 'numeric' });
+
+  // Статистика
+  const total    = window.PATIENTS.length;
+  const active   = window.PATIENTS.filter(p => p.status === 'current').length;
+  const discharged = window.PATIENTS.filter(p => p.status === 'discharged').length;
+  const improved = window.PATIENTS.filter(p => p.outcome === 'Улучшение').length;
+
+  const statsData = [
+    { label: 'Всего пациентов', value: total,     color: '#0f6d7a' },
+    { label: 'Активных',        value: active,    color: '#2f8f63' },
+    { label: 'Выписано',        value: discharged, color: '#777'   },
+    { label: 'Улучшение',       value: improved,  color: '#2f8f63' },
+  ];
+  const statsRow = document.getElementById('stats-row');
+  statsData.forEach(s => {
+    const div = document.createElement('div');
+    div.style.cssText = `flex:1; background:#fff; border:1px solid #ddd; border-radius:3px; padding:16px; text-align:center; border-top:3px solid ${s.color};`;
+    div.innerHTML = `<div style="font-size:28px; font-weight:700; color:${s.color};">${s.value}</div><div style="font-size:12px; color:#777; margin-top:4px;">${s.label}</div>`;
+    statsRow.appendChild(div);
+  });
+
+  // Таблица
+  const tbody = document.getElementById('report-tbody');
+  window.PATIENTS.forEach(p => {
+    const statusMap = {
+      current:    '<span class="badge badge-success">Активный</span>',
+      discharged: '<span class="badge badge-default">Выписан</span>',
+      new:        '<span class="badge badge-info">Новый</span>'
+    };
+    const days = p.currentDay || 14;
+    const outcome = p.outcome
+      ? `<span class="badge badge-success">${p.outcome}</span>`
+      : '<span class="badge badge-default">—</span>';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><a href="patient.html?id=${p.id}">${p.id}</a></td>
+      <td><strong>${p.fullName}</strong></td>
+      <td>${p.admissionDate}</td>
+      <td>${p.dischargeDate || '—'}</td>
+      <td class="text-center">${days}</td>
+      <td><small>${p.admissionDiagnosisClarify || p.admissionDiagnosisMain}</small></td>
+      <td>${outcome}</td>
+      <td>${statusMap[p.status] || ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+</script>
+</body>
+</html>

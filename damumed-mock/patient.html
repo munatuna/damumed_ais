@@ -59,11 +59,11 @@
   <ul class="dmed-tabs" id="mh-navigation">
     <li><a href="patient.html?id={{PID}}"       data-tab="main"      id="tab-main">Главная</a></li>
     <li><a href="medical-record.html?id={{PID}}" data-tab="medical"   id="tab-medical">Медицинские записи</a></li>
-    <li><a href="#" data-tab="diagnoses"    id="tab-diagnoses"    onclick="return false;">Диагнозы</a></li>
+    <li><a href="diagnoses.html?id={{PID}}" data-tab="diagnoses" id="tab-diagnoses">Диагнозы</a></li>
     <li><a href="assignments.html?id={{PID}}"    data-tab="assignments" id="tab-assignments">Назначения</a></li>
     <li><a href="diary.html?id={{PID}}"          data-tab="diary"     id="tab-diary">Дневниковые записи</a></li>
     <li><a href="#" data-tab="operations"   id="tab-operations"   onclick="return false;">Операции</a></li>
-    <li><a href="#" data-tab="vitals"       id="tab-vitals"       onclick="return false;">Показатели</a></li>
+    <li><a href="vitals.html?id={{PID}}"     data-tab="vitals"     id="tab-vitals">Показатели здоровья</a></li>
     <li><a href="#" data-tab="documents"    id="tab-documents"    onclick="return false;">Документы</a></li>
   </ul>
 
@@ -104,7 +104,7 @@
             <div class="dmed-panel-heading"><h4>Последние дневники</h4></div>
             <div class="dmed-panel-body" style="padding: 0;">
               <table class="dmed-table">
-                <tbody>
+                <tbody id="diaries-list">
                   <tr>
                     <td style="width: 110px;">13.03.2026 09:00</td>
                     <td>Т° 36.5 | П 84 | АД 110/60</td>
@@ -161,6 +161,7 @@
   </div>
 </div>
 
+<script src="storage.js"></script>
 <script src="data.js"></script>
 <script>
   // Получаем ID пациента из URL
@@ -211,6 +212,65 @@
     `;
     tbody.appendChild(tr);
   });
+
+  // ── Динамические медицинские записи ───────────────────────────────
+  (function () {
+    const tbody = document.getElementById('records-list');
+    const pidLocal = patient.id;
+    const savedIdx = window.DmedStorage.getRecordsIndex(pidLocal);
+    const defaults = [
+      { rtype: 'primary', typeLabel: 'Первичный осмотр', dateStr: patient.admissionDate + ' 09:09', signed: true },
+      { rtype: 'stage',   typeLabel: 'Этапный эпикриз',  dateStr: '13.03.2026 10:00',              signed: true },
+    ];
+    const list = savedIdx.length ? savedIdx : defaults;
+    tbody.innerHTML = '';
+    list.forEach(r => {
+      const dt = r.savedAt
+        ? new Date(r.savedAt).toLocaleString('ru', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',','')
+        : (r.dateStr || '—');
+      const badge = r.signed
+        ? '<span class="badge badge-success">Подписан</span>'
+        : '<span class="badge badge-warning">Черновик</span>';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="width:110px;">${dt}</td><td><a href="medical-record.html?id=${pidLocal}&type=${r.rtype}">${r.typeLabel}</a></td><td>${badge}</td>`;
+      tbody.appendChild(tr);
+    });
+    const trNew = document.createElement('tr');
+    trNew.innerHTML = `<td>— — —</td><td><a href="medical-record.html?id=${pidLocal}&type=new" class="text-muted">+ Создать новую запись</a></td><td></td>`;
+    tbody.appendChild(trNew);
+  })();
+
+  // ── Динамические дневники ──────────────────────────────────────────
+  (function () {
+    const tbody = document.getElementById('diaries-list');
+    if (!tbody) return;
+    const pidLocal = patient.id;
+    const saved = window.DmedStorage.getDiaries(pidLocal);
+    const defaults = [
+      { date: '13.03.2026 09:00', vitals: { temperature: '36.5', pulse: '84', pressure_top: '110', pressure_bottom: '60' } },
+      { date: '11.03.2026 09:30', vitals: { temperature: '36.6', pulse: '86', pressure_top: '110', pressure_bottom: '60' } },
+      { date: '09.03.2026 09:32', vitals: { temperature: '36.4', pulse: '86', pressure_top: '110', pressure_bottom: '60' } },
+    ];
+    const list = saved.length ? saved : defaults;
+    tbody.innerHTML = '';
+    list.slice(0, 3).forEach(d => {
+      const dt = d.savedAt
+        ? new Date(d.savedAt).toLocaleString('ru', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',','')
+        : (d.date || '—');
+      const v = d.vitals || {};
+      const parts = [];
+      if (v.temperature) parts.push('Т° ' + v.temperature);
+      if (v.pulse)       parts.push('П ' + v.pulse);
+      if (v.pressure_top && v.pressure_bottom) parts.push('АД ' + v.pressure_top + '/' + v.pressure_bottom);
+      const vitStr = parts.join(' | ') || 'Запись сохранена';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="width:110px;">${dt}</td><td>${vitStr}</td><td><span class="badge badge-success">OK</span></td>`;
+      tbody.appendChild(tr);
+    });
+    const trNew = document.createElement('tr');
+    trNew.innerHTML = `<td>— — —</td><td><a href="diary.html?id=${pidLocal}&new=1">+ Новая запись</a></td><td></td>`;
+    tbody.appendChild(trNew);
+  })();
 
   // Клик "Выполнить" (агент тоже будет это делать)
   document.addEventListener('click', (e) => {
