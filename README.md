@@ -4,6 +4,16 @@
 
 Помогает врачам реабилитационного центра «Акбобек» заполнять медицинскую документацию голосом, генерировать расписание процедур и анализировать PDF выписок.
 
+## Демо
+
+**https://web-production-7cb3b.up.railway.app**
+
+| Интерфейс | Ссылка |
+|---|---|
+| Лечащий врач | [/index.html](https://web-production-7cb3b.up.railway.app/index.html) |
+| Массажист | [/specialist-queue.html?specialist=massager](https://web-production-7cb3b.up.railway.app/specialist-queue.html?specialist=massager) |
+| Психолог | [/specialist-queue.html?specialist=psychologist](https://web-production-7cb3b.up.railway.app/specialist-queue.html?specialist=psychologist) |
+
 ---
 
 ## Читать код — с чего начать
@@ -151,9 +161,9 @@ python-multipart
 
 | URL | Кто |
 |---|---|
-| `localhost:8080` | Лечащий врач |
-| `localhost:8080/specialist-queue.html?specialist=massager` | Массажист |
-| `localhost:8080/specialist-queue.html?specialist=psychologist` | Психолог |
+| `https://web-production-7cb3b.up.railway.app` | Лечащий врач |
+| `https://web-production-7cb3b.up.railway.app/specialist-queue.html?specialist=massager` | Массажист |
+| `https://web-production-7cb3b.up.railway.app/specialist-queue.html?specialist=psychologist` | Психолог |
 
 ---
 

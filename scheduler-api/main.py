@@ -13,6 +13,7 @@ import os
 
 import httpx
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -211,6 +212,11 @@ def generate_demo(req: DemoRequest):
         schedule = [_entry_to_out(e) for e in schedule],
         stats    = _build_stats(schedule),
     )
+
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/login.html")
 
 
 # ── Static files (damumed-mock) — must be last ────────────────────────────────
