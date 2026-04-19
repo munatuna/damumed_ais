@@ -158,6 +158,8 @@ class ClaudeProxyRequest(BaseModel):
 
 @app.post("/api/llm")
 async def claude_proxy(req: ClaudeProxyRequest):
+    import asyncio
+
     user_content = []
     if req.pdfBase64:
         user_content.append({
@@ -177,16 +179,21 @@ async def claude_proxy(req: ClaudeProxyRequest):
         "messages": [{"role": "user", "content": user_content}],
     }
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        resp = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": req.apiKey,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json=payload,
-        )
+    for attempt in range(3):
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": req.apiKey,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json=payload,
+            )
+        if resp.status_code == 429 and attempt < 2:
+            await asyncio.sleep(3 * (attempt + 1))
+            continue
+        break
 
     if resp.status_code != 200:
         raise HTTPException(status_code=resp.status_code, detail=resp.text)
